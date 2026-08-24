@@ -144,6 +144,8 @@ def main() -> int:
             fail(errors, "builder SKILL.md must stop when helpers are missing")
         if "Archidekt import" not in text:
             fail(errors, "builder SKILL.md must require an Archidekt import block")
+        if "buy list" not in text.lower():
+            fail(errors, "builder SKILL.md must require a purchase-only Archidekt buy list")
         if "canonical" not in text.lower():
             fail(errors, "builder SKILL.md must document the canonical deck file")
 

@@ -1,6 +1,6 @@
 ---
 name: commander-deck-builder
-description: Interview-first Commander deck building and review for Archidekt lists. Use when the user wants to build an EDH deck, review an existing list, find synergies, plan upgrades, or propose budget-aware swaps.
+description: Interview-first Commander deck building and review for Archidekt lists. Use when the user wants to build an EDH deck, review an existing list, find synergies, plan upgrades, propose budget-aware swaps, or get a buy list of cards to purchase.
 ---
 
 # Commander deck builder
@@ -56,6 +56,7 @@ Cover what is still unknown:
 - Theme and win style
 - Bracket or power, pet cards, house bans
 - Budget and currency, only if they have one. Ask whether it means total deck value or additional upgrade spend, whether already-owned cards count, and whether proxies are allowed. Do not invent a cap or a reading of "budget."
+- Cards they already own, and whether a proxy counts as owned
 - Existing list versus a complete new deck
 - Canonical deck file path
 - Combo and tutor preferences, and how much decision complexity they want, only when power or table rules did not already settle it
@@ -99,22 +100,32 @@ Parsing rules the helper already enforces:
 - Parse metadata from the right so punctuation or numbers inside a real name survive.
 - Feed exact printing identifiers to Scryfall when supplied. Otherwise resolve by exact Oracle name after normalization.
 
-Every build or review ends with one fenced block labelled **Archidekt import**.
+Every build or review ends with a fenced block labelled **Archidekt import**.
 
-Inside that block:
+Every review or upgrade also ends with a second fenced block labelled **Archidekt import: buy list**. During a new build, add that second block when they named cards they already own.
+
+Inside each block:
 
 - Only `quantity + exact Oracle name`
 - One card per line
 - No headings, categories, prices, bullets, comments, set codes, or analysis
-- Command-zone cards stay in the block
 
-Outside the block, say which imported card or cards the user must mark as Commander or Premier in Archidekt. The minimal text format does not keep that flag.
+The full-deck block also includes command-zone cards. Outside that block, say which imported card or cards the user must mark as Commander or Premier in Archidekt. The minimal text format does not keep that flag.
 
-Put every explanation before the import block so they can copy the last fence without cleanup.
+The buy list is not the deck. It is only the cards they still need to purchase:
 
-Run `validate-deck` on the final block before delivery. Check syntax, quantities, resolved names, legal Commander construction when the deck is final, and no sideboard or maybeboard leakage.
+- Ask which cards they already own. Do not guess a collection.
+- For review and upgrade, the default is accepted or proposed adds they do not own. If they said they do not own the current list, the buy list is every card in the accepted deck they do not own. Ask if that choice is still unclear.
+- Never include cuts, owned cards, sideboard, maybeboard, or out-of-deck piles.
+- If proxies are allowed and they will proxy a card, leave it off the buy list unless they still want to buy it.
+- Quantities are only the copies they still need.
+- Proposed swaps produce a proposed buy list. After they accept, rebuild the buy list from the accepted adds only.
 
-The delivered import block must match the canonical file exactly.
+Put every explanation before both import blocks. Label each fence. The last fence is the buy list when one exists, so they can copy it without cleanup.
+
+Run `validate-deck` on the full-deck block before delivery. Check syntax, quantities, resolved names, legal Commander construction when the deck is final, and no sideboard or maybeboard leakage. Validate the buy list for syntax, quantities, and resolved names only. Do not require legal Commander size on a buy list.
+
+The full-deck import block must match the canonical file exactly. Do not write the buy list into that file. If they want the buy list on disk, ask for a separate path and write it with `write-deck`.
 
 ## Evidence order
 
@@ -152,7 +163,7 @@ flowchart TD
 - `scryfall` `search` fills holes with constraints derived at run time. Do not invent example queries here.
 - If a budget is set, run the same price rules as review mode before delivering the list.
 
-**Build output.** Category counts, package notes, and a why-line for picks that are not obvious, then the validated Archidekt import block. No quota on how many notes.
+**Build output.** Category counts, package notes, and a why-line for picks that are not obvious, then the validated Archidekt import block. If they named owned cards, add the buy-list block after it. No quota on how many notes.
 
 After a finalized block, you may offer a handoff to `commander-deck-playbook`. Do not append a playbook yourself.
 
@@ -173,7 +184,7 @@ flowchart TD
   listIn --> fetch --> meta --> profile --> strat --> need --> budget --> swaps
 ```
 
-1. Accept a pasted list or local file. Preserve quantities, commander designation, set and collector information when supplied, and a user-provided owned versus not-owned distinction. If a remote deck URL cannot be read, ask for an export rather than scraping an unsupported site.
+1. Accept a pasted list or local file. Preserve quantities, commander designation, set and collector information when supplied, and a user-provided owned versus not-owned distinction. Ask for owned cards if they have not said. If a remote deck URL cannot be read, ask for an export rather than scraping an unsupported site.
 2. Fetch every card with Scryfall. Need `oracle_text` including every face, `type_line`, `color_identity`, `legalities.commander`, and the current Game Changer flag. Validate construction before strategy analysis.
 3. Pull EDHREC commander lists. Note high-synergy misses and broad metagame patterns, with sample size and inclusion context where available. Do not label low-inclusion cards as dead.
 4. Ground synergy claims in Oracle text, not memory.
@@ -184,7 +195,7 @@ flowchart TD
    - Mana-base or curve work when the strategy is fine but the deck is clumsy.
    - If budget remains under the cap, spend it on the highest-leverage on-plan upgrade, not a random staple.
 6. Propose upgrades as one-for-one swaps, or a small bundle when one expensive cut funds one critical addition. Rank them by how much they serve the stated strategy. Never a shopping list without cuts.
-7. Budget only if the user set a cap and currency. Use `scryfall` `prices`. Apply their chosen basis: total value or additional spend, owned cards included or excluded. Report price coverage and uncertainty. Stay at or under their cap after every accepted swap.
+7. Budget only if the user set a cap and currency. Use `scryfall` `prices`. Apply their chosen basis: total value or additional spend, owned cards included or excluded. When the basis is additional spend, price the buy list, not the whole deck. Report price coverage and uncertainty. Stay at or under their cap after every accepted swap.
 8. If a critical addition exceeds budget, do not drop the strategy. Find a cheaper card that does the same job as an expensive non-core piece. Cut that, free money, then add the critical card. Say which role stayed intact.
 9. If nothing can be downgraded without breaking the plan, say so and offer a cheaper functional stand-in for the critical addition itself.
 
@@ -207,7 +218,7 @@ Every suggestion uses this shape. Show both Oracle texts. The bracketed words ar
 > Oracle text of the new card
 ```
 
-Lead the report with **Constraints**, price basis and coverage plus total versus cap if set, legality and identity flags, **Category counts**, synergy packages, **the upgrade strategy**, then the ranked swaps. End with the validated post-swap Archidekt import block after accepted changes, or the current canonical file if they have not accepted yet.
+Lead the report with **Constraints**, price basis and coverage plus total versus cap if set, legality and identity flags, **Category counts**, synergy packages, **the upgrade strategy**, then the ranked swaps. End with the validated full-deck Archidekt import, then the **Archidekt import: buy list**. After accepted changes, both blocks follow the updated canonical file. If they have not accepted yet, the full-deck block is the current file and the buy list is the proposed adds they do not own.
 
 ## Pricing
 

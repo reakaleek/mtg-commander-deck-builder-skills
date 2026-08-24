@@ -43,7 +43,9 @@ Bring a pasted Archidekt export or a local file. If you already have a local fil
 
 The review writes an upgrade strategy first, then ranked cut-to-add swaps. Each swap shows both Oracle texts. Proposed swaps stay in the report. The file changes only after you accept a swap or a batch.
 
-If you set a budget, prices come from `scryfall` in the currency you named. Missing prices stay unknown. Low EDHREC inclusion is not a cut reason by itself.
+You get two copy-only Archidekt blocks: the full accepted list, then a **buy list** of only the cards you still need to purchase. Say which cards you already own, and whether a proxy counts as owned. The buy list is not written into the canonical deck file.
+
+If you set a budget, prices come from `scryfall` in the currency you named. Additional-spend budgets price the buy list. Missing prices stay unknown. Low EDHREC inclusion is not a cut reason by itself.
 
 ### Pilot a finished deck
 
@@ -75,9 +77,9 @@ These are job shapes. Fill in your commander, list, path, and budget when you ha
 
 **Review**
 
-> Review this Archidekt export. Write an upgrade strategy, then ranked swaps. Do not change the file until I accept a swap.
+> Review this Archidekt export. Write an upgrade strategy, then ranked swaps. End with a buy list of only the cards I still need to purchase. Do not change the file until I accept a swap.
 
-> Review the list in this file. Ask if that file should become canonical. Propose budget-aware swaps only if I set a cap and a currency.
+> Review the list in this file. Ask if that file should become canonical. I will mark cards I already own. Propose budget-aware swaps only if I set a cap and a currency.
 
 **Playbook**
 
