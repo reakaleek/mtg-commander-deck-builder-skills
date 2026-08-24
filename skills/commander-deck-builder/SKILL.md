@@ -19,9 +19,9 @@ If either skill is missing from this session, stop. Tell the user to install the
 npx skills add reakaleek/mtg-commander-deck-builder-skills
 ```
 
-Do not guess where those skills live on disk. Do not replace their helpers with ad-hoc HTTP.
+Find each helper from the installed skill directory that contains that skill's `SKILL.md`. Run `scripts/scryfall.py` or `scripts/edhrec.py` from that folder, or pass the full path to the file. Do not search the repo and read the `.py` source. If a flag is unclear, run `--help`. Open the source only if the command fails.
 
-Run their helpers. Do not reimplement curl.
+Do not replace their helpers with ad-hoc HTTP. Do not reimplement curl.
 
 ## Modes
 
@@ -88,7 +88,7 @@ python scripts/scryfall.py validate-deck FILE
 python scripts/scryfall.py write-deck DEST
 ```
 
-Those commands live in the `scryfall` skill. Run them from that skill root.
+Those commands live in the `scryfall` skill. Run them from that skill's directory. Do not read `scryfall.py`.
 
 Parsing rules the helper already enforces:
 

@@ -7,8 +7,11 @@ description: Fetch EDHREC commander staples, card synergies, inclusion rates, an
 
 Pick the page, slugify the exact Oracle name, then run the helper next to this file. Do not scrape HTML. Do not reimplement curl.
 
+The helper is `scripts/edhrec.py` in this skill directory, the folder that contains this `SKILL.md`. Run it from that folder, or pass the full path to that file. Do not read the `.py` source. The commands below are enough. If a flag is unclear, run `--help`. Open the source only if the command fails.
+
 ```
 python scripts/edhrec.py <command>
+python scripts/edhrec.py --help
 ```
 
 These pages are unofficial frontend JSON. No API key, no SLA, shapes can change. Be polite.

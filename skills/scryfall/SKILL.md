@@ -7,8 +7,11 @@ description: "Query Scryfall via the REST API, search syntax, collection batches
 
 Pick the cheapest Scryfall path, then run the helper next to this file. Do not reimplement curl.
 
+The helper is `scripts/scryfall.py` in this skill directory, the folder that contains this `SKILL.md`. Run it from that folder, or pass the full path to that file. Do not read the `.py` source. The commands below are enough. If a flag is unclear, run `--help`. Open the source only if the command fails.
+
 ```
 python scripts/scryfall.py <command>
+python scripts/scryfall.py --help
 ```
 
 Search operators: [syntax.md](syntax.md)
@@ -36,9 +39,13 @@ python scripts/scryfall.py collection decklist.txt --fuzzy-missing
 python scripts/scryfall.py prices decklist.txt --currency eur
 python scripts/scryfall.py parse-deck decklist.txt
 python scripts/scryfall.py validate-deck decklist.txt
+python scripts/scryfall.py validate-deck decklist.txt --final --resolve
 python scripts/scryfall.py write-deck deck.txt
+python scripts/scryfall.py write-deck deck.txt --file-in source.txt
 python scripts/scryfall.py bulk oracle_cards
 ```
+
+`parse-deck` and `collection` accept a file path or `-` for stdin. `prices` uses `--currency usd|eur|tix`. `write-deck` reads stdin unless you pass `--file-in`. `--force` overwrites a non-deck file.
 
 `search` defaults to `--max 40` and slim `--fields`. Raise `--max` only if you need more. Use `--unique prints` only when printings, prices, or art matter.
 

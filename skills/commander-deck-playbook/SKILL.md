@@ -21,7 +21,9 @@ If that skill is missing from this session, stop. Tell the user to install the f
 npx skills add reakaleek/mtg-commander-deck-builder-skills
 ```
 
-Do not guess where the skill lives on disk. Do not replace its helper with ad-hoc HTTP.
+Find `scryfall` from the installed skill directory that contains its `SKILL.md`. Run `scripts/scryfall.py` from that folder, or pass the full path to the file. Do not search the repo and read the `.py` source. If a flag is unclear, run `--help`. Open the source only if the command fails.
+
+Do not replace its helper with ad-hoc HTTP.
 
 This skill may accept a deck produced by `commander-deck-builder`. It does not depend on that skill and must not rewrite the builder's file.
 
@@ -34,7 +36,7 @@ python scripts/scryfall.py parse-deck FILE
 python scripts/scryfall.py collection FILE
 ```
 
-Those commands live in the `scryfall` skill. Run them from that skill root.
+Those commands live in the `scryfall` skill. Run them from that skill's directory. Do not read `scryfall.py`.
 
 Prefer the canonical deck file when the user supplies it. The playbook is read-only. Never write that file.
 
