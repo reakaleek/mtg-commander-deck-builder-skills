@@ -60,6 +60,14 @@ Cover what is still unknown:
 - Existing list versus a complete new deck
 - Canonical deck file path
 - Combo and tutor preferences, and how much decision complexity they want, only when power or table rules did not already settle it
+- For a review, how recent games felt: record the functional failure as no mana,
+  no board, no cards, no answers, or commander too late
+- Which turn they first did something that mattered; use that turn as the review
+  target
+- Whether they already own the current list; if yes, the buy list contains only
+  new cards versus that source
+- Whether the table uses house prices or extra rules for flagged cards; never
+  invent a rule
 - The open question above
 
 Resolve the commander with `scryfall` `named --fuzzy`, then confirm identity and legality with the user.
@@ -152,6 +160,18 @@ Answer the questions in [guides.md](guides.md) from this commander, this list, a
 
 Build and review both print **Category counts**. Raw counts only. No target column. If a swap exists to fix a real hole, say so in Why.
 
+When a jargon term first appears, define it in one sentence (for example,
+“tutor” means a card that searches for another card). Use the same rule for
+mill, Game Changer, buy list, loop, and payoff.
+
+Count each card once under one primary role; use secondary tags only to explain
+overlap. Include what the commander supplies and when it usually becomes
+available, rather than treating a late commander as early ramp or draw. Mark
+whether each relevant card works alone or needs another permanent, graveyard,
+or token. Count always-tapped lands and other delayed mana sources. For any
+card that checks a property of other cards, verify that property across the
+whole list, not only a count of one card type.
+
 ## Build mode
 
 ```mermaid
@@ -170,6 +190,11 @@ flowchart TD
 - `scryfall` `collection` resolves names and card data. Validate legal deck size, commander eligibility, color identity, format legality, singleton rules and explicit exceptions, plus partner, background, or companion structure when those apply.
 - `scryfall` `search` fills holes with constraints derived at run time. Do not invent example queries here.
 - If a budget is set, run the same price rules as review mode before delivering the list.
+- Before the first swap or finalized recommendation, run a simple opening-hand
+  or goldfish check against the stated failure. State that it is a heuristic,
+  not a real multiplayer game. Before sending the report, ask whether the
+  proposed changes would alter the last game in the way the user described; if
+  not, revise them.
 
 **Build output.** Category counts, package notes, and a why-line for picks that are not obvious, then the validated Archidekt import block. If they named owned cards, add the buy-list block after it. No quota on how many notes.
 
@@ -203,11 +228,32 @@ flowchart TD
    - Mana-base or curve work when the strategy is fine but the deck is clumsy.
    - If budget remains under the cap, spend it on the highest-leverage on-plan upgrade, not a random staple.
 6. Propose upgrades as one-for-one swaps, or a small bundle when one expensive cut funds one critical addition. Rank them by how much they serve the stated strategy. Never a shopping list without cuts.
+   Before recommending every addition, verify and state its justification:
+   the stated failure or plan it addresses, which existing cards already do
+   that job, why this copy is better than a replacement or no change, and any
+   dependency or added decision complexity. If three or more cards already do
+   the job, skip the addition or replace the weakest copy.
 7. Budget only if the user set a cap and currency. Use `scryfall` `prices`. Apply their chosen basis: total value or additional spend, owned cards included or excluded. When the basis is additional spend, price the buy list, not the whole deck. Report price coverage and uncertainty. Stay at or under their cap after every accepted swap.
 8. If a critical addition exceeds budget, do not drop the strategy. Find a cheaper card that does the same job as an expensive non-core piece. Cut that, free money, then add the critical card. Say which role stayed intact.
 9. If nothing can be downgraded without breaking the plan, say so and offer a cheaper functional stand-in for the critical addition itself.
 
 Do not recommend a swap that breaks a hard constraint. Rejected swaps leave the canonical file unchanged.
+
+Before the first swap list, run a simple opening-hand or goldfish check against
+the stated failure and say that it is a heuristic, not a real multiplayer
+game. An early-game complaint needs cheap cards that affect the board or life
+total before the commander; a late-game complaint needs finishers or resets.
+Do not use a high-mana version of the same plan to fix a slow start. Before
+sending the report, ask whether these swaps would change the last game in the
+way the user described; if not, revise them.
+
+When cutting a card, state which capability leaves the deck. Replace the role,
+not merely the first legal or cheap card, when a cut is required for legality,
+budget, or a house rule. Prefer lasting board presence and cards that work from
+an empty board; explicitly flag adds that need another piece. Split interaction
+recommendations by job (stop an attack, remove one threat, reset one player, or
+reset the table). Say when the color identity cannot do the requested job
+cheaply and offer the nearest real option without calling a fog a wrath.
 
 ### Swap report
 
@@ -227,6 +273,16 @@ Every suggestion uses this shape. Show both Oracle texts. The bracketed words ar
 ```
 
 Lead the report with **Constraints**, price basis and coverage plus total versus cap if set, legality and identity flags, **Category counts**, synergy packages, **the upgrade strategy**, then the ranked swaps. End with the validated full-deck Archidekt import, then the **Archidekt import: buy list**. After accepted changes, both blocks follow the updated canonical file. If they have not accepted yet, the full-deck block is the current file and the buy list is the proposed adds they do not own.
+
+For every important line, include setup, spell order, mana left after the
+first spell, and what happens if the second spell is countered or the first
+piece dies. In the first report, name popular commander cards that are not
+being added and why. After a full import, print a delta containing only new
+cards plus a short cut list, and add a brief how-to-use note for each new card
+whose timing or mode is not obvious. If another review arrives, say which
+useful diagnosis was kept and reject incorrect counting. After a finished list,
+offer a playbook handoff for mulligans, lines, and recovery without writing it
+unless asked.
 
 ## Pricing
 
