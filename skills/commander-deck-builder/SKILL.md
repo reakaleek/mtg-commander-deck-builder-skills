@@ -11,15 +11,15 @@ Interview questions and category checks live in [guides.md](guides.md). The defa
 
 ## Preflight
 
-This skill needs both `scryfall` and `edhrec`. The Skills CLI does not install dependencies for you.
+This skill needs `scryfall`, `edhrec`, and `archidekt`. The Skills CLI does not install dependencies for you.
 
-If either skill is missing from this session, stop. Tell the user to install the full repo:
+If any of them is missing from this session, stop. Tell the user to install the full repo:
 
 ```
 npx skills add reakaleek/mtg-commander-deck-builder-skills
 ```
 
-Find each helper from the installed skill directory that contains that skill's `SKILL.md`. Run `scripts/scryfall.py` or `scripts/edhrec.py` from that folder, or pass the full path to the file. Do not search the repo and read the `.py` source. If a flag is unclear, run `--help`. Open the source only if the command fails.
+Find each helper from the installed skill directory that contains that skill's `SKILL.md`. Run `scripts/scryfall.py`, `scripts/edhrec.py`, or `scripts/archidekt.py` from that folder, or pass the full path to the file. Do not search the repo and read the `.py` source. If a flag is unclear, run `--help`. Open the source only if the command fails.
 
 Do not replace their helpers with ad-hoc HTTP. Do not reimplement curl.
 
@@ -81,7 +81,15 @@ One Archidekt-safe text file is the accepted deck.
 
 ## Archidekt input and output
 
-Likely input is an Archidekt text export. Parse and validate through `scryfall`:
+Likely input is an Archidekt text export or an Archidekt deck URL.
+
+If they give a deck URL instead of a paste, fetch it with `archidekt` first, then hand the result to `scryfall`:
+
+```
+python scripts/archidekt.py fetch URL --out FILE
+```
+
+Then parse and validate the file through `scryfall`:
 
 ```
 python scripts/scryfall.py parse-deck FILE
@@ -89,7 +97,7 @@ python scripts/scryfall.py validate-deck FILE
 python scripts/scryfall.py write-deck DEST
 ```
 
-Those commands live in the `scryfall` skill. Run them from that skill's directory. Do not read `scryfall.py`.
+Those commands live in the `scryfall` and `archidekt` skills. Run them from each skill's own directory. Do not read `scryfall.py` or `archidekt.py`.
 
 Parsing rules the helper already enforces:
 
@@ -184,7 +192,7 @@ flowchart TD
   listIn --> fetch --> meta --> profile --> strat --> need --> budget --> swaps
 ```
 
-1. Accept a pasted list or local file. Preserve quantities, commander designation, set and collector information when supplied, and a user-provided owned versus not-owned distinction. Ask for owned cards if they have not said. If a remote deck URL cannot be read, ask for an export rather than scraping an unsupported site.
+1. Accept a pasted list, a local file, or an Archidekt deck URL. Fetch a deck URL with `archidekt` `fetch` rather than scraping the page. Preserve quantities, commander designation, set and collector information when supplied, and a user-provided owned versus not-owned distinction. Ask for owned cards if they have not said. If the URL cannot be fetched (private deck, unsupported site), ask for a pasted export instead.
 2. Fetch every card with Scryfall. Need `oracle_text` including every face, `type_line`, `color_identity`, `legalities.commander`, and the current Game Changer flag. Validate construction before strategy analysis.
 3. Pull EDHREC commander lists. Note high-synergy misses and broad metagame patterns, with sample size and inclusion context where available. Do not label low-inclusion cards as dead.
 4. Ground synergy claims in Oracle text, not memory.
