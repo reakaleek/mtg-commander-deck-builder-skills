@@ -172,6 +172,14 @@ or token. Count always-tapped lands and other delayed mana sources. For any
 card that checks a property of other cards, verify that property across the
 whole list, not only a count of one card type.
 
+### Pre-swap check
+
+Before the first swap or finalized recommendation, run a simple opening-hand
+or goldfish check against the stated failure. State that it is a heuristic,
+not a real multiplayer game. Before sending the report, ask: “If their last
+game failed the way they described, do these swaps change that game?” If not,
+revise them.
+
 ## Build mode
 
 ```mermaid
@@ -190,11 +198,6 @@ flowchart TD
 - `scryfall` `collection` resolves names and card data. Validate legal deck size, commander eligibility, color identity, format legality, singleton rules and explicit exceptions, plus partner, background, or companion structure when those apply.
 - `scryfall` `search` fills holes with constraints derived at run time. Do not invent example queries here.
 - If a budget is set, run the same price rules as review mode before delivering the list.
-- Before the first swap or finalized recommendation, run a simple opening-hand
-  or goldfish check against the stated failure. State that it is a heuristic,
-  not a real multiplayer game. Before sending the report, ask whether the
-  proposed changes would alter the last game in the way the user described; if
-  not, revise them.
 
 **Build output.** Category counts, package notes, and a why-line for picks that are not obvious, then the validated Archidekt import block. If they named owned cards, add the buy-list block after it. No quota on how many notes.
 
@@ -239,13 +242,10 @@ flowchart TD
 
 Do not recommend a swap that breaks a hard constraint. Rejected swaps leave the canonical file unchanged.
 
-Before the first swap list, run a simple opening-hand or goldfish check against
-the stated failure and say that it is a heuristic, not a real multiplayer
-game. An early-game complaint needs cheap cards that affect the board or life
-total before the commander; a late-game complaint needs finishers or resets.
-Do not use a high-mana version of the same plan to fix a slow start. Before
-sending the report, ask whether these swaps would change the last game in the
-way the user described; if not, revise them.
+Apply the shared **Pre-swap check** before this swap list. An early-game
+complaint needs cheap cards that affect the board or life total before the
+commander; a late-game complaint needs finishers or resets. Do not use a
+high-mana version of the same plan to fix a slow start.
 
 When cutting a card, state which capability leaves the deck. Replace the role,
 not merely the first legal or cheap card, when a cut is required for legality,
