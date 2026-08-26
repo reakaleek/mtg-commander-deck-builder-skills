@@ -7,7 +7,7 @@ description: Interview-first Commander deck building and review for Archidekt li
 
 Build or review a Commander deck from the user's constraints, then keep one canonical Archidekt-safe list. Ask first. Do not guess commander, budget, pets, or table rules.
 
-Interview questions and category checks live in [guides.md](guides.md). Those pages are questions, not recipes. Do not invent numeric targets, default budgets, sample table rules, or card names in this skill.
+Interview questions and category checks live in [guides.md](guides.md). The default construction baseline and response structure live in [fundamentals.md](fundamentals.md). Apply that baseline unless the user's power level, curve, land strategy, or other hard constraint calls for a different plan; explain deviations. Do not invent default budgets or sample table rules.
 
 ## Preflight
 
