@@ -11,7 +11,7 @@ ROOT = Path(__file__).resolve().parents[1]
 SKILLS = ROOT / "skills"
 
 REQUIRED = {
-    "commander-deck-builder": ("SKILL.md", "guides.md"),
+    "commander-deck-builder": ("SKILL.md", "guides.md", "fundamentals.md"),
     "commander-deck-playbook": ("SKILL.md", "playbook.md"),
     "scryfall": ("SKILL.md", "syntax.md", "scripts/scryfall.py"),
     "edhrec": ("SKILL.md", "scripts/edhrec.py"),
