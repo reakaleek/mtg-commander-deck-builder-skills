@@ -1,6 +1,6 @@
 # Commander deck builder skills
 
-Four Agent Skills for building, reviewing, and piloting Commander decks. Archidekt text is the list format. Install the whole repo. The Skills CLI does not resolve skill-to-skill dependencies, so installing only a high-level skill is incomplete.
+Five Agent Skills for building, reviewing, and piloting Commander decks. Archidekt text is the list format. Install the whole repo. The Skills CLI does not resolve skill-to-skill dependencies, so installing only a high-level skill is incomplete.
 
 The repository is private. GitHub auth is required.
 
@@ -9,7 +9,7 @@ npx skills add reakaleek/mtg-commander-deck-builder-skills
 npx skills add reakaleek/mtg-commander-deck-builder-skills --list
 ```
 
-Confirm the list shows all four names: `commander-deck-builder`, `commander-deck-playbook`, `scryfall`, and `edhrec`.
+Confirm the list shows all five names: `commander-deck-builder`, `commander-deck-playbook`, `scryfall`, `edhrec`, and `archidekt`.
 
 ## Usage
 
@@ -39,7 +39,7 @@ The builder may offer a playbook when the list is final. It will not write one u
 
 Ask to review an EDH list, find synergies, or propose upgrades. Same skill.
 
-Bring a pasted Archidekt export or a local file. If you already have a local file, say whether it should become the canonical file before anything overwrites it.
+Bring a pasted Archidekt export, an Archidekt deck URL, or a local file. If you already have a local file, say whether it should become the canonical file before anything overwrites it.
 
 The review writes an upgrade strategy first, then ranked cut-to-add swaps. Each swap shows both Oracle texts. Proposed swaps stay in the report. The file changes only after you accept a swap or a batch.
 
@@ -57,13 +57,15 @@ The playbook explains the submitted list. It does not replace cards. If a line i
 
 This skill needs `scryfall` so it can parse the list and read Oracle text. It does not need `edhrec`. Metagame synergy is for choosing cards, not for teaching the cards already in the file.
 
-### Look up cards, prices, or EDHREC pages
+### Look up cards, prices, EDHREC pages, or an Archidekt URL
 
 Ask about a card, a search, a price, or an Archidekt parse. `scryfall` should start.
 
 Ask what people play with a commander, inclusion, or high synergy. `edhrec` should start.
 
-Those two skills return data. They do not build or review a deck, and they do not call the builder.
+Share an Archidekt deck link, or ask how to read one. `archidekt` should start.
+
+Those three skills return data. They do not build or review a deck, and they do not call the builder.
 
 ### Example prompts
 
@@ -95,14 +97,17 @@ These are job shapes. Fill in your commander, list, path, and budget when you ha
 
 > What do people play with this commander on EDHREC? Show high synergy and inclusion, not a new decklist.
 
+> Fetch this Archidekt deck URL and show the clean import block.
+
 ## What each skill needs
 
 | Skill | Needs | Does |
 | --- | --- | --- |
-| `commander-deck-builder` | `scryfall` and `edhrec` | Interview, build or review, keep the canonical file |
+| `commander-deck-builder` | `scryfall`, `edhrec`, and `archidekt` | Interview, build or review, keep the canonical file |
 | `commander-deck-playbook` | `scryfall` | Write a piloting guide. Never rewrite the deck file |
 | `scryfall` | nothing else | Oracle, legality, search, prices, parse, validate, write |
 | `edhrec` | nothing else | Unofficial inclusion, synergy, and average-deck JSON |
+| `archidekt` | nothing else | Derive the API URL from a deck URL and fetch that deck's JSON |
 
 If a high-level skill stops and tells you to install the full repo, a helper is missing. Run the install command above again. Do not point the agent at a guessed disk path.
 
@@ -112,3 +117,4 @@ If a high-level skill stops and tells you to install the full repo, a helper is 
 - `commander-deck-playbook` writes a piloting guide for a finished list and does not change that file
 - `scryfall` looks up Oracle text, legality, searches, prices, and Archidekt parse or validate
 - `edhrec` reads unofficial `json.edhrec.com` inclusion, synergy, and average-deck pages
+- `archidekt` derives the API URL from an Archidekt deck URL and fetches that deck's JSON
