@@ -48,6 +48,55 @@ role for the category table.
 5. Check Commander legality: 100 cards including the commander, singleton
    construction except for permitted exceptions, and color identity.
 
+## Design rules
+
+These checks sit on top of the baseline. They decide whether a card belongs,
+not how the file is written.
+
+1. **Read restricted commander resources as written.** If the commander adds
+   mana, a discount, or permission to cast only in one phase, only for certain
+   spells, or only from a certain zone, do not treat that as generic mana. It
+   cannot pay for answers on other players' turns unless the text says so.
+2. **Thesis over theme count.** Do not add a creature type or brand card just
+   to raise a tribal or theme count. The card must advance the thesis or fix a
+   stated failure.
+3. **Stated failure beats generic advice.** A review written for a generic
+   archetype can recommend cutting the cards that already fix the player's
+   actual losses. Keep those roles until a new game shows a different hole more
+   than once.
+4. **Finishers versus floor.** If the list already has enough dedicated ways
+   to win, do not add more expensive value spells. Do not fund those adds by
+   cutting early defense. Cheap selection raises the floor but can pull a
+   high-mana commander plan off thesis; add it only after clunky opening hands
+   show more than once.
+5. **Do not replace a unique closer.** If only one card turns a large mana
+   surplus into a win, do not swap it for a safer card that does a different
+   job. Casting a spell without paying its mana cost sets X to 0. That is a
+   play-pattern cost, not a reason to cut the only X closer. When the effect
+   allows putting the card into hand instead, that is the correct play.
+6. **Same job, prefer the instant.** When two cards do the same job and one is
+   an instant, the sorcery is the weaker copy unless the sorcery has a second
+   use the list needs.
+7. **Attack answers are not interchangeable.** An extra cost to attack, a cap
+   on how many creatures may attack, and returning attackers to hand are
+   different jobs. Having one does not replace the others.
+8. **Bounce is delay.** Returning a permanent does not remove it for the rest
+   of the game, especially cheap permanents that recast easily.
+9. **Copy effects need a floor.** A spell that only copies something already
+   on the stack does nothing when the stack is empty, unless it has another
+   mode.
+10. **Recursion follows a zone.** A graveyard plan does not recover cards left
+    in exile. Do not add a rescue package for a rare miss in the wrong zone.
+11. **Category totals can overcount interaction.** A card that also draws or
+    finishes still occupies one primary role. Judge cheap versus expensive
+    answers and the stated failure, not the raw interaction total.
+12. **One-mode mana when decisions hurt.** A permanent that can make mana or
+    be sacrificed to draw asks for a choice every turn. Prefer a single-mode
+    source, or give one default rule, when the player asked for low decision
+    complexity.
+13. **Unspent budget is allowed.** Do not spend leftover value on off-plan
+    cards to hit a cap.
+
 ## Required build or analysis output
 
 When building or analyzing a deck, present:
