@@ -41,7 +41,7 @@ Ask to review an EDH list, find synergies, or propose upgrades. Same skill.
 
 Bring a pasted Archidekt export, an Archidekt deck URL, or a local file. If you already have a local file, say whether it should become the canonical file before anything overwrites it.
 
-The review writes an upgrade strategy first, then ranked cut-to-add swaps. Each swap shows both Oracle texts. Proposed swaps stay in the report. The file changes only after you accept a swap or a batch.
+The review diagnoses the deck as a system before touching cards: commander fit, structural counts, package reliability, dependencies, win conditions, and an interaction answer matrix, scaled to how deep your request goes. Only after that does it rank the current weakest slots and write an upgrade strategy first, then ranked cut-to-add swaps. Each swap shows both Oracle texts. Proposed swaps stay in the report. The file changes only after you accept a swap or a batch.
 
 You get two copy-only Archidekt blocks: the full accepted list, then a **buy list** of only the cards you still need to purchase. Say which cards you already own, and whether a proxy counts as owned. The buy list is not written into the canonical deck file.
 
