@@ -9,6 +9,8 @@ Build or review a Commander deck from the user's constraints, then keep one cano
 
 Interview questions and category checks live in [guides.md](guides.md). The default construction baseline, design rules, and response structure live in [fundamentals.md](fundamentals.md). Apply that baseline unless the user's power level, curve, land strategy, or other hard constraint calls for a different plan; explain deviations. Do not invent default budgets or sample table rules.
 
+Diagnose the deck as a system before recommending any change. The multi-pass audit questions, scaling guidance, and report structure live in [review-framework.md](review-framework.md). Apply it in both modes: fully before finalizing a build or running a full review/upgrade, and partially (scaled to the request) for a narrower ask. Do not start from a card and look for a cut; start from a diagnosed problem.
+
 ## Preflight
 
 This skill needs `scryfall`, `edhrec`, and `archidekt`. The Skills CLI does not install dependencies for you.
@@ -40,8 +42,8 @@ Treat the answer as hard constraints. Apply what they said. If they forbid a tac
 
 Keep a short ledger:
 
-- Hard: legality, table rules, exclusions, budget
-- Preference: theme, pets, play style
+- Hard: legality, table rules (Game Changer cap, combo/tutor/MLD/extra-turn/stax restrictions), exclusions, budget
+- Preference: theme, pets, play style, intended win pattern, pod or meta information
 
 Never silently violate a hard constraint. If two hard constraints conflict, pause and ask which one wins.
 
@@ -68,6 +70,8 @@ Cover what is still unknown:
   new cards versus that source
 - Whether the table uses house prices or extra rules for flagged cards; never
   invent a rule
+- Pod or meta information (creature-heavy, graveyard-heavy, combo-heavy, fast
+  mana, another player already on this commander), only if useful for fit
 - The open question above
 
 Resolve the commander with `scryfall` `named --fuzzy`, then confirm identity and legality with the user.
@@ -188,18 +192,23 @@ flowchart TD
   resolve[Scryfall: commander identity and legality]
   meta[EDHREC: commander lists plus average-deck]
   fill[Fill lands, ramp, draw, interaction, wins, theme]
+  diagnose[Review-framework: fit, reliability, dependency, redundancy, wins, mana, goldfish]
+  weak[Improve the weakest slots found]
   check[Scryfall: rules validation and requested-currency prices]
   list[Pasteable legal deck plus package notes]
-  ask --> resolve --> meta --> fill --> check --> list
+  ask --> resolve --> meta --> fill --> diagnose --> weak --> check --> list
   list --> ask
 ```
 
 - EDHREC average-deck, High Synergy, and Top Cards are a baseline, not the finished list. Drop anything that violates table rules even if it is a staple.
 - `scryfall` `collection` resolves names and card data. Validate legal deck size, commander eligibility, color identity, format legality, singleton rules and explicit exceptions, plus partner, background, or companion structure when those apply.
 - `scryfall` `search` fills holes with constraints derived at run time. Do not invent example queries here.
+- Before declaring a build final, run the **Build mode reuse** checklist in [review-framework.md](review-framework.md): commander fit, one primary role per card, package reliability and dependencies, redundancy, realistic win lines, the answer matrix, mana/curve, and the opening-hand/goldfish heuristic, then improve the weakest slots found.
 - If a budget is set, run the same price rules as review mode before delivering the list.
 
 **Build output.** Category counts, package notes, and a why-line for picks that are not obvious, then the validated Archidekt import block. If they named owned cards, add the buy-list block after it. No quota on how many notes.
+
+When the user has a strategy but no commander, use the **Commander recommendation mode** criteria in [review-framework.md](review-framework.md) rather than picking the most popular option on EDHREC.
 
 After a finalized block, you may offer a handoff to `commander-deck-playbook`. Do not append a playbook yourself.
 
@@ -207,38 +216,43 @@ After a finalized block, you may offer a handoff to `commander-deck-playbook`. D
 
 Synergies, a coherent upgrade strategy, then explicit swaps under the user's budget. Invent the path. Do not only patch holes or chase EDHREC top cards.
 
+Diagnose before you propose. Run the audits in [review-framework.md](review-framework.md), scaled to what the user asked: a narrow ask ("analyze my deck statistically") can stop after structure, reliability, mana, and coverage; a broad ask ("optimize this deck" or "review and upgrade") runs the full sequence, including the weakest-slot ranking, before any swap is drafted.
+
 ```mermaid
 flowchart TD
   listIn[Parse existing list]
   fetch[Scryfall: Oracle, identity, legality, requested-currency prices]
   meta[EDHREC: synergy and inclusion vs this commander]
   profile[Packages, gaps, and off-plan cards]
+  diagnose[Review-framework: fit, reliability, dependency, redundancy, wins, answer matrix, mana, goldfish, adversarial]
+  weak[Rank the weakest slots]
   strat[Pick an upgrade strategy]
   need[Critical strategy upgrades]
   budget[Apply the user budget basis and fund critical upgrades]
   swaps[Ranked swap report: cut to add]
-  listIn --> fetch --> meta --> profile --> strat --> need --> budget --> swaps
+  listIn --> fetch --> meta --> profile --> diagnose --> weak --> strat --> need --> budget --> swaps
 ```
 
 1. Accept a pasted list, a local file, or an Archidekt deck URL. Fetch a deck URL with `archidekt` `fetch` rather than scraping the page. Preserve quantities, commander designation, set and collector information when supplied, and a user-provided owned versus not-owned distinction. Ask for owned cards if they have not said. If the URL cannot be fetched (private deck, unsupported site), ask for a pasted export instead.
 2. Fetch every card with Scryfall. Need `oracle_text` including every face, `type_line`, `color_identity`, `legalities.commander`, and the current Game Changer flag. Validate construction before strategy analysis.
 3. Pull EDHREC commander lists. Note high-synergy misses and broad metagame patterns, with sample size and inclusion context where available. Do not label low-inclusion cards as dead.
 4. Ground synergy claims in Oracle text, not memory.
-5. Write an upgrade strategy first, one short paragraph, then swaps that execute it. Pick what fits this list:
+5. Rank the current weakest cards (see **Weakest-slot ranking** in the review framework) before searching for any addition. The order of work is problem first, candidate second, never the reverse.
+6. Write an upgrade strategy first, one short paragraph, then swaps that execute it. Pick what fits this list:
    - Close a demonstrated functional gap before chasing power.
    - Tighten a package the commander already wants. Same engine, better pieces.
    - Replace off-plan cards with on-plan ones, even if the add is cheaper.
    - Mana-base or curve work when the strategy is fine but the deck is clumsy.
    - If budget remains under the cap, spend it on the highest-leverage on-plan upgrade, not a random staple.
-6. Propose upgrades as one-for-one swaps, or a small bundle when one expensive cut funds one critical addition. Rank them by how much they serve the stated strategy. Never a shopping list without cuts.
+7. Propose upgrades as one-for-one swaps, or a small bundle when one expensive cut funds one critical addition. Rank them by how much they serve the stated strategy. Never a shopping list without cuts.
    Before recommending every addition, verify and state its justification:
    the stated failure or plan it addresses, which existing cards already do
    that job, why this copy is better than a replacement or no change, and any
    dependency or added decision complexity. If three or more cards already do
    the job, skip the addition or replace the weakest copy.
-7. Budget only if the user set a cap and currency. Use `scryfall` `prices`. Apply their chosen basis: total value or additional spend, owned cards included or excluded. When the basis is additional spend, price the buy list, not the whole deck. Report price coverage and uncertainty. Stay at or under their cap after every accepted swap.
-8. If a critical addition exceeds budget, do not drop the strategy. Find a cheaper card that does the same job as an expensive non-core piece. Cut that, free money, then add the critical card. Say which role stayed intact.
-9. If nothing can be downgraded without breaking the plan, say so and offer a cheaper functional stand-in for the critical addition itself.
+8. Budget only if the user set a cap and currency. Use `scryfall` `prices`. Apply their chosen basis: total value or additional spend, owned cards included or excluded. When the basis is additional spend, price the buy list, not the whole deck. Report price coverage and uncertainty. Stay at or under their cap after every accepted swap.
+9. If a critical addition exceeds budget, do not drop the strategy. Find a cheaper card that does the same job as an expensive non-core piece. Cut that, free money, then add the critical card. Say which role stayed intact.
+10. If nothing can be downgraded without breaking the plan, say so and offer a cheaper functional stand-in for the critical addition itself.
 
 Do not recommend a swap that breaks a hard constraint. Rejected swaps leave the canonical file unchanged.
 
@@ -272,7 +286,7 @@ Every suggestion uses this shape. Show both Oracle texts. The bracketed words ar
 > Oracle text of the new card
 ```
 
-Lead the report with **Constraints**, price basis and coverage plus total versus cap if set, legality and identity flags, **Category counts**, synergy packages, **the upgrade strategy**, then the ranked swaps. End with the validated full-deck Archidekt import, then the **Archidekt import: buy list**. After accepted changes, both blocks follow the updated canonical file. If they have not accepted yet, the full-deck block is the current file and the buy list is the proposed adds they do not own.
+Lead the report with **Constraints**, price basis and coverage plus total versus cap if set, legality and identity flags, **Category counts**, synergy packages, **Weakest slots**, **the upgrade strategy**, then the ranked swaps. Follow the **Report structure** in [review-framework.md](review-framework.md) for a full review; a narrower ask may drop sections that add nothing here. End with the validated full-deck Archidekt import, then the **Archidekt import: buy list**. After accepted changes, both blocks follow the updated canonical file. If they have not accepted yet, the full-deck block is the current file and the buy list is the proposed adds they do not own.
 
 For every important line, include setup, spell order, mana left after the
 first spell, and what happens if the second spell is countered or the first
