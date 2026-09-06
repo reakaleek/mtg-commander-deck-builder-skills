@@ -48,6 +48,16 @@ role for the category table.
 5. Check Commander legality: 100 cards including the commander, singleton
    construction except for permitted exceptions, and color identity.
 
+## Playtesting and iteration
+
+Goldfishing and opening-hand checks are useful for finding mana and curve
+problems, but they are not evidence of multiplayer performance. Test the deck
+in real games at the intended table, record what actually failed (for example,
+missing mana, cards, answers, or a way to close), and distinguish a repeatable
+problem from a single unlucky game. Adjust the list toward the observed
+failure, then recheck the functional counts, dependencies, and constraints
+instead of changing cards merely because a general ratio suggests it.
+
 ## Design rules
 
 These checks sit on top of the baseline. They decide whether a card belongs,
