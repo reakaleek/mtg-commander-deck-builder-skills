@@ -61,9 +61,9 @@ This skill needs `scryfall` so it can parse the list and read Oracle text. It do
 
 Ask to goldfish a deck, test opening hands, play out turns, or run a mana-base check. `goldfish` should start.
 
-Bring the canonical file or a decklist, and say which cards are commanders if the file cannot mark them. For a turn-by-turn session it shuffles the library, deals an opening hand, and lets you mulligan, keep, and advance turns one command at a time, moving cards between hand, battlefield, graveyard, exile, and the command zone as you play them. For a fast mana-base check it runs many random shuffles instead and reports opening-hand and per-turn land odds. A 4-player simulation is one seat per decklist, each with its own state file.
+Bring the canonical file or a decklist, and say which cards are commanders if the file cannot mark them. For a turn-by-turn session it shuffles the library, deals an opening hand, and lets you mulligan, keep, and advance turns one command at a time, moving cards between hand, battlefield, graveyard, exile, and the command zone as you play them. For a fast mana-base check it runs many random shuffles instead and reports opening-hand and per-turn land odds; that check needs `scryfall` first to identify which cards are lands. A 4-player simulation is one seat per decklist, each with its own state file.
 
-This skill does not know Oracle text, mana costs, or legality. It only tracks zones and turns.
+This skill does not know Oracle text, mana costs, or legality on its own. It only tracks zones and turns.
 
 ### Look up cards, prices, EDHREC pages, or an Archidekt URL
 
@@ -122,7 +122,7 @@ These are job shapes. Fill in your commander, list, path, and budget when you ha
 | `scryfall` | nothing else | Oracle, legality, search, prices, parse, validate, write |
 | `edhrec` | nothing else | Unofficial inclusion, synergy, and average-deck JSON |
 | `archidekt` | nothing else | Derive the API URL from a deck URL and fetch that deck's JSON |
-| `goldfish` | nothing else | Shuffle, mulligan, and play turns round by round, or run a mana-base Monte Carlo check |
+| `goldfish` | `scryfall` for the mana-base check only | Shuffle, mulligan, and play turns round by round, or run a mana-base Monte Carlo check |
 
 If a high-level skill stops and tells you to install the full repo, a helper is missing. Run the install command above again. Do not point the agent at a guessed disk path.
 
@@ -133,4 +133,4 @@ If a high-level skill stops and tells you to install the full repo, a helper is 
 - `scryfall` looks up Oracle text, legality, searches, prices, and Archidekt parse or validate
 - `edhrec` reads unofficial `json.edhrec.com` inclusion, synergy, and average-deck pages
 - `archidekt` derives the API URL from an Archidekt deck URL and fetches that deck's JSON
-- `goldfish` shuffles a decklist and plays it out round by round, or runs a mana-base Monte Carlo check
+- `goldfish` shuffles a decklist and plays it out round by round, or runs a mana-base Monte Carlo check (using `scryfall` to identify lands)

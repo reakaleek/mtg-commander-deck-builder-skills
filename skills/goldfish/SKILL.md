@@ -54,11 +54,16 @@ The state file is plain JSON. Read it directly, or always re-run `state` after e
 
 `stats` runs a fast Monte Carlo simulation over many random shuffles instead of a single playthrough. It never touches a state file.
 
+This skill has no Oracle data of its own, so it does not know which cards are lands. Get that from `scryfall` instead of guessing or asking the user to list every land by hand:
+
 ```bash
-python scripts/goldfish.py stats deck.txt --land Plains --land Island --land "Command Tower" --iterations 5000 --turns 8
+python ../scryfall/scripts/scryfall.py collection deck.txt --fields name,type_line > types.json
+python scripts/goldfish.py stats deck.txt --types types.json --iterations 5000 --turns 8
 ```
 
-`--land NAME` is required, once per land card name in the list (basics and nonbasics both draw and produce mana the same way here). It reports the average lands in the opening hand, the share of opening hands with 0-1 or 6-plus lands, and the average cumulative lands seen by each turn. Use it to judge whether a land count or curve is likely to flood or screw before playing out individual games.
+`--types PATH` reads that scryfall `collection` (or `search`) JSON and counts every card whose `type_line` contains `Land` as a land, basic or not. Use `--land NAME` instead, or in addition, only for a card that should count as a land for this check despite its type line (a land-cycling card kept in hand as a land substitute, for example), or when `scryfall` cannot be run. At least one of `--types` or `--land` is required.
+
+It reports the average lands in the opening hand, the share of opening hands with 0-1 or 6-plus lands, and the average cumulative lands seen by each turn. Use it to judge whether a land count or curve is likely to flood or screw before playing out individual games.
 
 ## Multiplayer goldfishing
 

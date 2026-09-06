@@ -422,12 +422,36 @@ def cmd_state(args: argparse.Namespace) -> int:
     return emit(state)
 
 
+def land_names_from_types(path: str) -> set[str]:
+    """Derive land card names from a scryfall `collection` (or `search`) JSON
+    dump. Accepts either the full envelope (`{"cards": [...]}`) or a bare
+    list of card objects, each needing at least `name` and `type_line`."""
+    data = json.loads(read_text(path))
+    rows = data.get("cards") if isinstance(data, dict) else data
+    if not isinstance(rows, list):
+        raise RuntimeError(f"{path!r} is not a scryfall card list ({{'cards': [...]}} or [...])")
+    names = set()
+    for row in rows:
+        if not isinstance(row, dict):
+            continue
+        name = row.get("name")
+        type_line = row.get("type_line") or ""
+        if name and "land" in type_line.lower():
+            names.add(name.strip().lower())
+    return names
+
+
 def cmd_stats(args: argparse.Namespace) -> int:
     parsed = parse_deck_text(read_text(args.deck), args.commander)
     library = parsed["library"]
     land_names = {n.strip().lower() for n in (args.land or [])}
+    if args.types:
+        land_names |= land_names_from_types(args.types)
     if not land_names:
-        raise RuntimeError("pass at least one --land NAME to identify lands for the simulation")
+        raise RuntimeError(
+            "no lands identified: pass --types PATH (scryfall 'collection' or "
+            "'search' JSON with name + type_line) and/or --land NAME to identify lands"
+        )
 
     deck_size = len(library)
     hand_size = args.hand_size
@@ -560,7 +584,12 @@ def build_parser() -> argparse.ArgumentParser:
 
     stats = sub.add_parser("stats", help="Monte Carlo mana-base analysis, no turn-by-turn state")
     stats.add_argument("deck", help="Path to a decklist file, or - for stdin")
-    stats.add_argument("--land", action="append", default=[], help="Card name that counts as a land (repeatable, required)")
+    stats.add_argument(
+        "--types",
+        default=None,
+        help="Path to scryfall 'collection' or 'search' JSON (name + type_line) to auto-detect lands",
+    )
+    stats.add_argument("--land", action="append", default=[], help="Card name that counts as a land (repeatable)")
     stats.add_argument("--commander", action="append", default=[], help="Card name excluded from the library (repeatable)")
     stats.add_argument("--iterations", type=int, default=1000)
     stats.add_argument("--turns", type=int, default=10)
