@@ -20,17 +20,24 @@ from typing import Any
 
 DEFAULT_HAND_SIZE = 7
 DEFAULT_STATE = "goldfish-state.json"
+MAX_LOG_ENTRIES = 50  # enough recent history for a session, without unbounded state-file growth
 
 LINE_QTY_RE = re.compile(r"^(\d+)\s*x?\s+(.*)$", re.IGNORECASE)
 SKIP_PREFIXES = ("//", "#")
-HEADER_RE = re.compile(r"^[A-Za-z][^:]*?(?:\s+\(\d+\))?$")
 
 ZONE_COMMAND = {"commander", "commanders", "command zone", "command", "cmdr"}
 ZONE_SIDE = {"sideboard", "sb"}
 ZONE_MAYBE = {"maybeboard", "maybe", "considering"}
 ZONE_OUT = {"not included", "not in deck", "out of deck", "unused"}
 ZONE_EXCLUDED = ZONE_SIDE | ZONE_MAYBE | ZONE_OUT
+ZONE_MAIN_HEADERS = {"deck", "main", "mainboard", "main deck"}
 KNOWN_LABELS = ZONE_COMMAND | ZONE_EXCLUDED
+# Header lines are recognized only by an exact (count-stripped) match against
+# this known set, e.g. "Sideboard" or "Sideboard (5)". A free-form heuristic
+# ("any capitalized line") would risk silently swallowing a bare card name
+# typed without its quantity, since Magic card names are also mostly Title
+# Case. Canonical decklist files only ever use "quantity name" lines anyway.
+KNOWN_HEADER_WORDS = KNOWN_LABELS | ZONE_MAIN_HEADERS
 KNOWN_ZONES = {"library", "hand", "battlefield", "graveyard", "exile", "command"}
 
 
@@ -44,14 +51,16 @@ def parse_card_line(line: str) -> dict[str, Any] | None:
     raw = line.strip()
     if not raw or raw.startswith(SKIP_PREFIXES):
         return None
-    if raw.lower() in {"sideboard", "maybeboard", "commander", "commanders", "deck", "mainboard"}:
+
+    header_name = re.sub(r"\s+\(\d+\)\s*$", "", raw).strip().lower()
+    if header_name in KNOWN_HEADER_WORDS:
         return {"header": raw}
 
     m = LINE_QTY_RE.match(raw)
     if not m:
-        if HEADER_RE.match(raw) and not raw[0].isdigit():
-            return {"header": raw}
-        return None
+        raise RuntimeError(
+            f"could not parse decklist line as a header or a 'quantity name' card line: {raw!r}"
+        )
 
     qty = int(m.group(1))
     rest = m.group(2).strip()
@@ -82,7 +91,7 @@ def section_from_header(header: str) -> str | None:
     name = re.sub(r"\s+\(\d+\)\s*$", "", header).strip().lower()
     if name in KNOWN_LABELS:
         return name
-    if name in {"deck", "main", "mainboard", "main deck"}:
+    if name in ZONE_MAIN_HEADERS:
         return "main"
     return None
 
@@ -187,7 +196,7 @@ def rng_for(state: dict[str, Any]) -> random.Random:
 def log(state: dict[str, Any], message: str) -> None:
     entries = state.setdefault("log", [])
     entries.append(message)
-    del entries[:-50]
+    del entries[:-MAX_LOG_ENTRIES]
 
 
 def emit(state: dict[str, Any]) -> int:
@@ -328,11 +337,21 @@ def cmd_move(args: argparse.Namespace) -> int:
     src = _zone_list(state, args.zone_from)
     dst = _zone_list(state, args.zone_to)
 
+    if args.bottom and args.zone_from != "library":
+        raise RuntimeError("--bottom only applies when --from library")
+
     if args.zone_from == "library":
+        if args.name is not None:
+            raise RuntimeError(
+                "moving from 'library' always takes the top (or --bottom) card; "
+                "--name is not supported for this direction"
+            )
         if not src:
             raise RuntimeError("library is empty")
         card = src.pop(len(src) - 1 if args.bottom else 0)
     elif args.zone_from == "battlefield":
+        if args.name is None:
+            raise RuntimeError("--name is required when moving from battlefield")
         idx = next((i for i, p in enumerate(src) if p["name"] == args.name), None)
         if idx is None:
             raise RuntimeError(f"{args.name!r} not found on battlefield")
@@ -417,8 +436,7 @@ def cmd_stats(args: argparse.Namespace) -> int:
     rng = random.Random(args.seed) if args.seed is not None else random.Random()
 
     opening_land_counts: list[int] = []
-    cards_seen_by_turn = hand_size if args.on_play else hand_size + 1
-    lands_by_turn = [0] * (turns + 1)
+    lands_by_turn_totals = [0] * (turns + 1)
     zero_or_one_land_hands = 0
     six_plus_land_hands = 0
 
@@ -433,16 +451,17 @@ def cmd_stats(args: argparse.Namespace) -> int:
         if opening_lands >= 6:
             six_plus_land_hands += 1
 
-        seen = list(hand)
+        lands_seen = opening_lands
         cursor = hand_size
         for t in range(1, turns + 1):
             if not (t == 1 and args.on_play) and cursor < len(shuffled):
-                seen.append(shuffled[cursor])
+                if shuffled[cursor].strip().lower() in land_names:
+                    lands_seen += 1
                 cursor += 1
-            lands_by_turn[t] = sum(1 for c in seen if c.strip().lower() in land_names)
+            lands_by_turn_totals[t] += lands_seen
 
     avg_opening = round(sum(opening_land_counts) / iterations, 3)
-    avg_by_turn = [None] + [round(sum_/iterations, 3) for sum_ in _column_sums(lands_by_turn, iterations)]
+    avg_by_turn = [None] + [round(total / iterations, 3) for total in lands_by_turn_totals[1:]]
 
     json.dump(
         {
@@ -462,13 +481,6 @@ def cmd_stats(args: argparse.Namespace) -> int:
     )
     sys.stdout.write("\n")
     return 0
-
-
-def _column_sums(totals_per_iteration_last_run: list[int], iterations: int) -> list[int]:
-    # lands_by_turn already accumulates the running total from the final
-    # iteration only; recomputed correctly in cmd_stats via a running sum
-    # across iterations instead. Kept for interface symmetry.
-    return totals_per_iteration_last_run[1:]
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -508,7 +520,7 @@ def build_parser() -> argparse.ArgumentParser:
     play = sub.add_parser("play", help="Move a card from hand to another zone (default battlefield)")
     add_state_arg(play)
     play.add_argument("name", help="Exact card name in hand")
-    play.add_argument("--zone", choices=sorted(KNOWN_ZONES - {"hand"}), default="battlefield")
+    play.add_argument("--zone", choices=sorted(KNOWN_ZONES - {"hand", "library"}), default="battlefield")
     play.add_argument("--tapped", action="store_true", help="Enter the battlefield tapped")
     play.set_defaults(func=cmd_play)
 
@@ -564,8 +576,6 @@ def build_parser() -> argparse.ArgumentParser:
 def main() -> int:
     parser = build_parser()
     args = parser.parse_args()
-    if getattr(args, "func", None) in (cmd_tap.__wrapped__ if False else None,):
-        pass
     if args.command in {"tap", "untap"} and not args.all and not args.name:
         parser.error("provide a card name or --all")
     try:
