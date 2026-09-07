@@ -459,10 +459,20 @@ def cmd_stats(args: argparse.Namespace) -> int:
     turns = args.turns
     rng = random.Random(args.seed) if args.seed is not None else random.Random()
 
+    target = args.mana_target
+    screw_turn = target + args.screw_tolerance
+    if max(target, screw_turn) > turns:
+        raise RuntimeError(
+            f"--turns {turns} is too short for --mana-target {target} "
+            f"and --screw-tolerance {args.screw_tolerance}"
+        )
+
     opening_land_counts: list[int] = []
     lands_by_turn_totals = [0] * (turns + 1)
     zero_or_one_land_hands = 0
     six_plus_land_hands = 0
+    screwed = 0
+    flooded = 0
 
     for _ in range(iterations):
         shuffled = list(library)
@@ -477,15 +487,24 @@ def cmd_stats(args: argparse.Namespace) -> int:
 
         lands_seen = opening_lands
         cursor = hand_size
+        lands_at_target = opening_lands
         for t in range(1, turns + 1):
             if not (t == 1 and args.on_play) and cursor < len(shuffled):
                 if shuffled[cursor].strip().lower() in land_names:
                     lands_seen += 1
                 cursor += 1
             lands_by_turn_totals[t] += lands_seen
+            if t == target:
+                lands_at_target = lands_seen
+            if t == screw_turn and lands_seen < target:
+                screwed += 1
+        if lands_at_target >= target + args.flood_tolerance:
+            flooded += 1
 
     avg_opening = round(sum(opening_land_counts) / iterations, 3)
     avg_by_turn = [None] + [round(total / iterations, 3) for total in lands_by_turn_totals[1:]]
+    screw_pct = round(100 * screwed / iterations, 2)
+    flood_pct = round(100 * flooded / iterations, 2)
 
     json.dump(
         {
@@ -498,6 +517,13 @@ def cmd_stats(args: argparse.Namespace) -> int:
             "opening_hand_0_1_lands_pct": round(100 * zero_or_one_land_hands / iterations, 2),
             "opening_hand_6_plus_lands_pct": round(100 * six_plus_land_hands / iterations, 2),
             "avg_cumulative_lands_seen_by_turn": avg_by_turn,
+            "mana_screw_pct": screw_pct,
+            "mana_flood_pct": flood_pct,
+            "sweet_spot_pct": round(100 - screw_pct - flood_pct, 2),
+            "sweet_spot_definition": (
+                f"screw: fewer than {target} lands by turn {screw_turn}; "
+                f"flood: {target + args.flood_tolerance} or more lands by turn {target}"
+            ),
         },
         sys.stdout,
         indent=2,
@@ -593,6 +619,9 @@ def build_parser() -> argparse.ArgumentParser:
     stats.add_argument("--commander", action="append", default=[], help="Card name excluded from the library (repeatable)")
     stats.add_argument("--iterations", type=int, default=1000)
     stats.add_argument("--turns", type=int, default=10)
+    stats.add_argument("--mana-target", type=int, default=4, help="Mana you want available on curve")
+    stats.add_argument("--screw-tolerance", type=int, default=1, help="Extra turns allowed to hit the target")
+    stats.add_argument("--flood-tolerance", type=int, default=2, help="Lands past the target that count as flood")
     stats.add_argument("--hand-size", type=int, default=DEFAULT_HAND_SIZE)
     stats.add_argument("--on-play", dest="on_play", action="store_true", default=True)
     stats.add_argument("--on-draw", dest="on_play", action="store_false")

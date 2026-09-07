@@ -93,8 +93,9 @@ def http_json(url: str, retries: int = 2) -> dict[str, Any]:
     raise RuntimeError(f"EDHREC request failed: {last_error}")
 
 
-def cache_path(cache_dir: Path, kind: str, slug: str) -> Path:
-    return cache_dir / kind / f"{slug}.json"
+def cache_path(cache_dir: Path, kind: str, slug: str, suffix: str | None = None) -> Path:
+    name = f"{slug}--{suffix}" if suffix else slug
+    return cache_dir / kind / f"{name}.json"
 
 
 def fetch_page(
@@ -102,19 +103,43 @@ def fetch_page(
     slug: str,
     cache_dir: Path,
     fresh: bool,
+    suffix: str | None = None,
 ) -> tuple[dict[str, Any], bool]:
-    dest = cache_path(cache_dir, kind, slug)
+    dest = cache_path(cache_dir, kind, slug, suffix)
     if not fresh and dest.exists():
         age = time.time() - dest.stat().st_mtime
         if age < CACHE_TTL_SEC:
             return json.loads(dest.read_text(encoding="utf-8")), True
 
     path = KIND_PATH[kind]
-    url = f"{BASE}/{path}/{urllib.parse.quote(slug)}.json"
+    if suffix:
+        url = f"{BASE}/{path}/{urllib.parse.quote(slug)}/{urllib.parse.quote(suffix)}.json"
+    else:
+        url = f"{BASE}/{path}/{urllib.parse.quote(slug)}.json"
     payload = http_json(url)
     dest.parent.mkdir(parents=True, exist_ok=True)
     dest.write_text(json.dumps(payload), encoding="utf-8")
     return payload, False
+
+
+def theme_slugs(page: dict[str, Any], commander_slug: str) -> list[dict[str, Any]]:
+    panels = page.get("panels") if isinstance(page.get("panels"), dict) else {}
+    links = panels.get("taglinks") or []
+    found: list[dict[str, Any]] = []
+    seen: set[str] = set()
+    for item in links:
+        if not isinstance(item, dict):
+            continue
+        slug = item.get("slug")
+        if not slug or slug in seen:
+            continue
+        seen.add(slug)
+        found.append({
+            "slug": slug,
+            "name": item.get("value"),
+            "count": item.get("count"),
+        })
+    return found
 
 
 def json_dict(page: dict[str, Any]) -> dict[str, Any]:
@@ -190,17 +215,54 @@ def cmd_lists(args: argparse.Namespace, kind: str) -> int:
     if not slug:
         print("Empty card name", file=sys.stderr)
         return 1
-    page, cached = fetch_page(kind, slug, Path(args.cache_dir).expanduser(), args.fresh)
+    suffix = None
+    if kind == "commander":
+        if getattr(args, "budget", False) and getattr(args, "theme", None):
+            print("Use only one of --theme or --budget", file=sys.stderr)
+            return 1
+        if getattr(args, "budget", False):
+            suffix = "budget"
+        elif getattr(args, "theme", None):
+            suffix = slugify(args.theme)
+            if not suffix:
+                print("Empty theme slug", file=sys.stderr)
+                return 1
+    page, cached = fetch_page(kind, slug, Path(args.cache_dir).expanduser(), args.fresh, suffix)
     card = json_dict(page).get("card") or {}
     payload = {
         "kind": kind,
         "name": card.get("name") or page.get("header") or args.name,
         "slug": slug,
+        "theme": suffix,
         "cached": cached,
         "num_decks": card.get("num_decks"),
         "rank": card.get("rank"),
         "salt": card.get("salt"),
         "lists": slim_lists(page, args.max, args.list),
+    }
+    json.dump(payload, sys.stdout, indent=2, ensure_ascii=False)
+    sys.stdout.write("\n")
+    return 0
+
+
+def cmd_themes(args: argparse.Namespace) -> int:
+    slug = slugify(args.name)
+    if not slug:
+        print("Empty card name", file=sys.stderr)
+        return 1
+    page, cached = fetch_page(
+        "commander",
+        slug,
+        Path(args.cache_dir).expanduser(),
+        args.fresh,
+    )
+    card = json_dict(page).get("card") or {}
+    payload = {
+        "kind": "themes",
+        "name": card.get("name") or page.get("header") or args.name,
+        "slug": slug,
+        "cached": cached,
+        "themes": theme_slugs(page, slug),
     }
     json.dump(payload, sys.stdout, indent=2, ensure_ascii=False)
     sys.stdout.write("\n")
@@ -260,7 +322,13 @@ def build_parser() -> argparse.ArgumentParser:
 
     commander = sub.add_parser("commander", help="GET /pages/commanders/{slug}.json")
     add_shared_flags(commander)
+    commander.add_argument("--theme", default=None, help="Theme subpage slug")
+    commander.add_argument("--budget", action="store_true", help="Budget subpage")
     commander.set_defaults(func=lambda a: cmd_lists(a, "commander"))
+
+    themes = sub.add_parser("themes", help="List theme slugs advertised on a commander page")
+    add_shared_flags(themes)
+    themes.set_defaults(func=cmd_themes)
 
     card = sub.add_parser("card", help="GET /pages/cards/{slug}.json")
     add_shared_flags(card)

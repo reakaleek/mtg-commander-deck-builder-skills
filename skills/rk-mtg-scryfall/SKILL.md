@@ -1,6 +1,6 @@
 ---
-name: scryfall
-description: "Query Scryfall via the REST API, search syntax, collection batches, cheapest-print prices, Archidekt deck parsing, and bulk data dumps. Use when looking up Magic cards, writing Scryfall searches, fetching a decklist, resolving card names, pricing a list, or parsing Archidekt text."
+name: rk-mtg-scryfall
+description: "Query Scryfall via the REST API, search syntax, collection batches, cheapest-print prices, Archidekt deck parsing, deck-stats, and bulk data dumps. Use when looking up Magic cards, writing Scryfall searches, fetching a decklist, resolving card names, pricing a list, parsing Archidekt text, or summarizing a list's curve and mana."
 ---
 
 # Scryfall
@@ -25,6 +25,7 @@ This skill returns Oracle text, legality, printings, and prices. Inclusion and c
 - Discover or filter unknown cards: `search` with `unique:cards`
 - Value a list in a requested currency: `prices`
 - Parse or check an Archidekt export: `parse-deck` / `validate-deck`
+- Curve, pips, colored sources, tipping point, playability, Game Changers: `deck-stats`
 - Repeated lookups or prices at scale: `bulk` (`oracle_cards`)
 
 Never call `/cards/named` once per decklist line. Never paginate a search just to resolve names you already have. A `/cards/collection` object is one printing, not the cheapest printing.
@@ -39,7 +40,8 @@ python scripts/scryfall.py collection decklist.txt --fuzzy-missing
 python scripts/scryfall.py prices decklist.txt --currency eur
 python scripts/scryfall.py parse-deck decklist.txt
 python scripts/scryfall.py validate-deck decklist.txt
-python scripts/scryfall.py validate-deck decklist.txt --final --resolve
+python scripts/scryfall.py validate-deck decklist.txt --final --resolve --bracket 3
+python scripts/scryfall.py deck-stats decklist.txt
 python scripts/scryfall.py write-deck deck.txt
 python scripts/scryfall.py write-deck deck.txt --file-in source.txt
 python scripts/scryfall.py bulk oracle_cards
@@ -114,7 +116,13 @@ Response `data` is found cards. `not_found` is unresolved identifiers. Order is 
 
 `parse-deck` reads minimal `quantity + name` lines and common Archidekt exports (optional `x`, set, collector number, foil marker, categories, labels). It splits command-zone, sideboard, maybeboard, and out-of-deck entries.
 
-`validate-deck` checks syntax, quantities, and leakage of excluded piles into the import block. `--final` also checks Commander construction (legal size, commander present). `--resolve` asks Scryfall whether names exist.
+`validate-deck` checks syntax, quantities, and leakage of excluded piles into the import block. `--final` also checks Commander construction (legal size, commander present). `--resolve` asks Scryfall whether names exist, then checks singleton (except basics and any-number cards), color identity, Commander legality, and Game Changer count. `--bracket N` implies `--resolve` and compares the Game Changer count to that bracket's cap.
+
+`deck-stats` fetches the list and reports the nonland mana-value histogram, early-play count (mana value 1–2), pips per color, colored sources from `produced_mana` split lands versus nonland, a tapped-land oracle-text heuristic, the Game Changer list, and a type breakdown. It does not assign functional roles.
+
+It also reports two derived numbers. `tipping_point` is the mana value that gets 65% of the nonland spells online, a better description of a deck's real speed than average mana value. `playability` estimates, per spell, the chance of casting it on curve on the play from lands alone, and lists the ten hardest to cast. Those are the slots to fix when the colors are strained; read `playability.note` for what the estimate assumes.
+
+`--market-index` adds a price-and-EDHREC-popularity index adapted from edhpowerlevel.com. It is not a power level and it knows nothing about synergy, combos, or deck construction: use `weakest_slots` to find cards the market rates far below the rest of the list, then judge them yourself. Prices come from Scryfall's default printing, so cards listed under `popularity_only` have their impact understated; run `prices --cheapest` if the money matters.
 
 `write-deck FILE` writes a clean import list atomically (quantity + exact name only).
 

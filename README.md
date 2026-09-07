@@ -1,6 +1,6 @@
 # Commander deck builder skills
 
-Six Agent Skills for building, reviewing, piloting, and goldfishing Commander decks. Archidekt text is the list format. Install the whole repo. The Skills CLI does not resolve skill-to-skill dependencies, so installing only a high-level skill is incomplete.
+Seven Agent Skills for building, reviewing, piloting, and goldfishing Commander decks. Archidekt text is the list format. Install the whole repo. The Skills CLI does not resolve skill-to-skill dependencies, so installing only a high-level skill is incomplete.
 
 The repository is private. GitHub auth is required.
 
@@ -9,7 +9,7 @@ npx skills add reakaleek/mtg-commander-deck-builder-skills
 npx skills add reakaleek/mtg-commander-deck-builder-skills --list
 ```
 
-Confirm the list shows all six names: `commander-deck-builder`, `commander-deck-playbook`, `scryfall`, `edhrec`, `archidekt`, and `goldfish`.
+Confirm the list shows all seven names: `rk-mtg-commander-deck-builder`, `rk-mtg-commander-deck-playbook`, `rk-mtg-scryfall`, `rk-mtg-edhrec`, `rk-mtg-archidekt`, `rk-mtg-goldfish`, and `rk-mtg-spellbook`.
 
 ## Usage
 
@@ -17,7 +17,7 @@ Talk to the agent in plain language. The skill descriptions decide which skill s
 
 ### Build a new deck
 
-Ask to build a Commander deck. `commander-deck-builder` should start.
+Ask to build a Commander deck. `rk-mtg-commander-deck-builder` should start.
 
 Bring what you already know:
 
@@ -39,41 +39,43 @@ The builder may offer a playbook when the list is final. It will not write one u
 
 Ask to review an EDH list, find synergies, or propose upgrades. Same skill.
 
-Bring a pasted Archidekt export, an Archidekt deck URL, or a local file. If you already have a local file, say whether it should become the canonical file before anything overwrites it.
+Bring a pasted Archidekt export, an Archidekt deck URL, or a local file. If you already have a local file, say whether that file should become the canonical file before anything overwrites it.
 
 The review diagnoses the deck as a system before touching cards: commander fit, structural counts, package reliability, dependencies, win conditions, and an interaction answer matrix, scaled to how deep your request goes. Only after that does it rank the current weakest slots and write an upgrade strategy first, then ranked cut-to-add swaps. Each swap shows both Oracle texts. Proposed swaps stay in the report. The file changes only after you accept a swap or a batch.
 
 You get two copy-only Archidekt blocks: the full accepted list, then a **buy list** of only the cards you still need to purchase. Say which cards you already own, and whether a proxy counts as owned. The buy list is not written into the canonical deck file.
 
-If you set a budget, prices come from `scryfall` in the currency you named. Additional-spend budgets price the buy list. Missing prices stay unknown. Low EDHREC inclusion is not a cut reason by itself.
+If you set a budget, prices come from `rk-mtg-scryfall` in the currency you named. Additional-spend budgets price the buy list. Missing prices stay unknown. Low EDHREC inclusion is not a cut reason by itself.
 
 ### Pilot a finished deck
 
-Ask for a deck playbook, how to play the list, mulligans, sequencing, combo lines, or a recovery plan. `commander-deck-playbook` should start.
+Ask for a deck playbook, how to play the list, mulligans, sequencing, combo lines, or a recovery plan. `rk-mtg-commander-deck-playbook` should start.
 
 Bring the canonical file or the same Archidekt export. Confirm the command-zone cards if the export does not mark them. Say how experienced you are and how deep you want the guide.
 
 The playbook explains the submitted list. It does not replace cards. If a line is missing a piece, it states the play limit and can hand you back to the builder. It writes Markdown in chat. It saves a file only if you ask.
 
-This skill needs `scryfall` so it can parse the list and read Oracle text. It does not need `edhrec`. Metagame synergy is for choosing cards, not for teaching the cards already in the file.
+This skill needs `rk-mtg-scryfall` so it can parse the list and read Oracle text. It does not need `rk-mtg-edhrec`. Metagame synergy is for choosing cards, not for teaching the cards already in the file. Combo cataloging uses `rk-mtg-spellbook` when that skill is installed.
 
 ### Goldfish or simulate a deck
 
-Ask to goldfish a deck, test opening hands, play out turns, or run a mana-base check. `goldfish` should start.
+Ask to goldfish a deck, test opening hands, play out turns, or run a mana-base check. `rk-mtg-goldfish` should start.
 
-Bring the canonical file or a decklist, and say which cards are commanders if the file cannot mark them. For a turn-by-turn session it shuffles the library, deals an opening hand, and lets you mulligan, keep, and advance turns one command at a time, moving cards between hand, battlefield, graveyard, exile, and the command zone as you play them. For a fast mana-base check it runs many random shuffles instead and reports opening-hand and per-turn land odds; that check needs `scryfall` first to identify which cards are lands. A 4-player simulation is one seat per decklist, each with its own state file.
+Bring the canonical file or a decklist, and say which cards are commanders if the file cannot mark them. For a turn-by-turn session it shuffles the library, deals an opening hand, and lets you mulligan, keep, and advance turns one command at a time, moving cards between hand, battlefield, graveyard, exile, and the command zone as you play them. For a fast mana-base check it runs many random shuffles instead and reports opening-hand and per-turn land odds; that check needs `rk-mtg-scryfall` first to identify which cards are lands. A 4-player simulation is one seat per decklist, each with its own state file.
 
 This skill does not know Oracle text, mana costs, or legality on its own. It only tracks zones and turns.
 
-### Look up cards, prices, EDHREC pages, or an Archidekt URL
+### Look up cards, prices, EDHREC pages, an Archidekt URL, or combos
 
-Ask about a card, a search, a price, or an Archidekt parse. `scryfall` should start.
+Ask about a card, a search, a price, or an Archidekt parse. `rk-mtg-scryfall` should start.
 
-Ask what people play with a commander, inclusion, or high synergy. `edhrec` should start.
+Ask what people play with a commander, inclusion, or high synergy. `rk-mtg-edhrec` should start.
 
-Share an Archidekt deck link, or ask how to read one. `archidekt` should start.
+Share an Archidekt deck link, or ask how to read one. `rk-mtg-archidekt` should start.
 
-Those three skills return data. They do not build or review a deck, and they do not call the builder.
+Ask which combos are in a list, or what bracket Spellbook estimates. `rk-mtg-spellbook` should start.
+
+Those four skills return data. They do not build or review a deck, and they do not call the builder.
 
 ### Example prompts
 
@@ -113,24 +115,28 @@ These are job shapes. Fill in your commander, list, path, and budget when you ha
 
 > Fetch this Archidekt deck URL and show the clean import block.
 
+> Which combos are in this list, and what does Spellbook estimate for bracket?
+
 ## What each skill needs
 
 | Skill | Needs | Does |
 | --- | --- | --- |
-| `commander-deck-builder` | `scryfall`, `edhrec`, and `archidekt` | Interview, build or review, keep the canonical file |
-| `commander-deck-playbook` | `scryfall` | Write a piloting guide. Never rewrite the deck file |
-| `scryfall` | nothing else | Oracle, legality, search, prices, parse, validate, write |
-| `edhrec` | nothing else | Unofficial inclusion, synergy, and average-deck JSON |
-| `archidekt` | nothing else | Derive the API URL from a deck URL and fetch that deck's JSON |
-| `goldfish` | `scryfall` for the mana-base check only | Shuffle, mulligan, and play turns round by round, or run a mana-base Monte Carlo check |
+| `rk-mtg-commander-deck-builder` | `rk-mtg-scryfall`, `rk-mtg-edhrec`, `rk-mtg-archidekt`, `rk-mtg-goldfish`, and `rk-mtg-spellbook` | Interview, build or review, keep the canonical file |
+| `rk-mtg-commander-deck-playbook` | `rk-mtg-scryfall` | Write a piloting guide. Never rewrite the deck file |
+| `rk-mtg-scryfall` | nothing else | Oracle, legality, search, prices, parse, validate, deck-stats, write |
+| `rk-mtg-edhrec` | nothing else | Unofficial inclusion, synergy, theme pages, and average-deck JSON |
+| `rk-mtg-archidekt` | nothing else | Derive the API URL from a deck URL and fetch that deck's JSON |
+| `rk-mtg-goldfish` | `rk-mtg-scryfall` for the mana-base check only | Shuffle, mulligan, and play turns round by round, or run a mana-base Monte Carlo check with screw, flood, and sweet-spot odds |
+| `rk-mtg-spellbook` | nothing else | Unofficial combo catalog and bracket estimate |
 
 If a high-level skill stops and tells you to install the full repo, a helper is missing. Run the install command above again. Do not point the agent at a guessed disk path.
 
 ## Skills
 
-- `commander-deck-builder` interviews, then builds or reviews a list and keeps one canonical Archidekt-safe file
-- `commander-deck-playbook` writes a piloting guide for a finished list and does not change that file
-- `scryfall` looks up Oracle text, legality, searches, prices, and Archidekt parse or validate
-- `edhrec` reads unofficial `json.edhrec.com` inclusion, synergy, and average-deck pages
-- `archidekt` derives the API URL from an Archidekt deck URL and fetches that deck's JSON
-- `goldfish` shuffles a decklist and plays it out round by round, or runs a mana-base Monte Carlo check (using `scryfall` to identify lands)
+- `rk-mtg-commander-deck-builder` interviews, then builds or reviews a list and keeps one canonical Archidekt-safe file
+- `rk-mtg-commander-deck-playbook` writes a piloting guide for a finished list and does not change that file
+- `rk-mtg-scryfall` looks up Oracle text, legality, searches, prices, deck-stats, and Archidekt parse or validate
+- `rk-mtg-edhrec` reads unofficial `json.edhrec.com` inclusion, synergy, theme, and average-deck pages
+- `rk-mtg-archidekt` derives the API URL from an Archidekt deck URL and fetches that deck's JSON
+- `rk-mtg-goldfish` shuffles a decklist and plays it out round by round, or runs a mana-base Monte Carlo check reporting screw, flood, and sweet-spot odds (using `rk-mtg-scryfall` to identify lands)
+- `rk-mtg-spellbook` looks up catalogued combos and a bracket estimate for a list

@@ -1,5 +1,5 @@
 ---
-name: edhrec
+name: rk-mtg-edhrec
 description: Fetch EDHREC commander staples, card synergies, inclusion rates, and average decks from json.edhrec.com. Use when the user asks about EDHREC, high synergy cards, Commander staples, inclusion, average decklists, or what people play with a commander.
 ---
 
@@ -16,23 +16,28 @@ python scripts/edhrec.py --help
 
 These pages are unofficial frontend JSON. No API key, no SLA, shapes can change. Be polite.
 
-This skill returns inclusion and commander-specific synergy. Oracle text and legality live on `scryfall`. Do not call deckbuilding skills from here.
+This skill returns inclusion and commander-specific synergy. Oracle text and legality live on `rk-mtg-scryfall`. Do not call deckbuilding skills from here.
 
 ## Pick the page
 
 - Named commander, staples or synergy: `commander`
+- Named commander, advertised theme slugs from the page's tag list: `themes`
+- Named commander, theme or budget subpage: `commander --theme SLUG` or `--budget`
 - Named card, who plays it or related cards: `card`
 - Named commander, typical list: `average-deck`
 
 ```bash
 python scripts/edhrec.py commander 'COMMANDER NAME'
+python scripts/edhrec.py themes 'COMMANDER NAME'
+python scripts/edhrec.py commander 'COMMANDER NAME' --theme tokens
+python scripts/edhrec.py commander 'COMMANDER NAME' --budget
 python scripts/edhrec.py card 'CARD NAME'
 python scripts/edhrec.py average-deck 'COMMANDER NAME'
 ```
 
 `--max` defaults to 10 cards per list. `--list HEADER` keeps matching list titles. Repeatable. `--fresh` skips the 24h cache.
 
-No fuzzy slugs. Missing pages often return HTTP 403 from the CDN, not 404. Resolve the Oracle name with the `scryfall` skill, then retry. Check the returned `name`.
+No fuzzy slugs. Missing pages often return HTTP 403 from the CDN, not 404. Resolve the Oracle name with the `rk-mtg-scryfall` skill, then retry. Check the returned `name`.
 
 ## Slugs
 
@@ -41,6 +46,7 @@ Lowercase, drop commas, apostrophes, and periods, then turn spaces into hyphens.
 URLs:
 
 - `https://json.edhrec.com/pages/commanders/{slug}.json`
+- `https://json.edhrec.com/pages/commanders/{slug}/{theme}.json`
 - `https://json.edhrec.com/pages/cards/{slug}.json`
 - `https://json.edhrec.com/pages/average-decks/{slug}.json`
 
