@@ -1,5 +1,5 @@
 ---
-name: archidekt
+name: rk-mtg-archidekt
 description: "Derive an Archidekt API URL from a deck page URL and fetch that deck's JSON. Use when the user shares an Archidekt deck link, asks how to read or parse an Archidekt URL, or wants a deck fetched directly from Archidekt instead of pasting an export."
 ---
 
@@ -14,7 +14,7 @@ python scripts/archidekt.py <command>
 python scripts/archidekt.py --help
 ```
 
-This skill returns Archidekt's own deck JSON, converted into `quantity + exact name` rows with a zone per card. Oracle text, legality, and prices live on `scryfall`. Synergy and inclusion live on `edhrec`. Do not call other deckbuilding skills from here.
+This skill returns Archidekt's own deck JSON, converted into `quantity + exact name` rows with a zone per card. Oracle text, legality, and prices live on `rk-mtg-scryfall`. Synergy and inclusion live on `rk-mtg-edhrec`. Do not call other deckbuilding skills from here.
 
 ## Reading an Archidekt URL
 
@@ -39,7 +39,7 @@ python scripts/archidekt.py fetch 19345263
 python scripts/archidekt.py fetch 'https://archidekt.com/decks/19345263/my_deck' --out deck.txt
 ```
 
-`url` only prints the derived API URL. `fetch` calls it and returns the parsed deck. `--out` writes a clean `quantity + name` import list, the same shape `scryfall` `write-deck` produces, so it can feed straight into `scryfall` `validate-deck` or `write-deck`.
+`url` only prints the derived API URL. `fetch` calls it and returns the parsed deck. `--out` writes a clean `quantity + name` import list, the same shape `rk-mtg-scryfall` `write-deck` produces, so it can feed straight into `rk-mtg-scryfall` `validate-deck` or `write-deck`.
 
 A private deck returns HTTP 404 from the API even though it exists. Ask the user to make it public or unlisted, or to paste an export instead.
 
@@ -54,7 +54,7 @@ A private deck returns HTTP 404 from the API even though it exists. Ask the user
 - `import_block`: `in_deck` as pasteable `quantity + exact name` lines
 - `written_to`: the `--out` path, or `null`
 
-Zone comes from Archidekt's own categories on each card (`Commander`, `Sideboard`, `Maybeboard`, and similar), the same category vocabulary `scryfall` `parse-deck` recognizes for pasted exports. Never silently count sideboard or maybeboard cards in the deck.
+Zone comes from Archidekt's own categories on each card (`Commander`, `Sideboard`, `Maybeboard`, and similar), the same category vocabulary `rk-mtg-scryfall` `parse-deck` recognizes for pasted exports. Never silently count sideboard or maybeboard cards in the deck.
 
 ## Headers and limits
 

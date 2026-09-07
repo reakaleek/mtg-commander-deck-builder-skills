@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import gzip
 import json
+import math
 import re
 import sys
 import time
@@ -24,7 +25,38 @@ DEFAULT_CACHE = Path.home() / ".cache" / "scryfall"
 PRICE_TTL_SEC = 24 * 60 * 60
 DEFAULT_FIELDS = (
     "name,mana_cost,cmc,type_line,oracle_text,color_identity,"
-    "colors,legalities,game_changer,scryfall_uri"
+    "produced_mana,keywords,game_changer,commander_legal,edhrec_rank,price_usd"
+)
+BRACKET_GC_CAP = {1: 0, 2: 0, 3: 3, 4: None, 5: None}
+
+# Market-index curves, transcribed from edhpowerlevel.com. Price is in USD,
+# popularity is EDHREC rank counted down from the worst rank in POP_CURVE.
+MARKET_PRICE_CURVE = (0, 0.5, 1.5, 3.5, 6, 10, 15, 25, 40, 65, 100)
+MARKET_POP_CURVE = (0, 8500, 13600, 17100, 19800, 21900, 23700, 25300, 26200, 26700, 27000)
+MARKET_POWER_CURVE = (0, 250, 320, 350, 380, 420, 470, 560, 760, 890, 1000)
+MARKET_PRICE_WEIGHT = 1.25
+MARKET_POP_WEIGHT = 0.75
+MARKET_LAND_FACTOR = 0.6
+MARKET_CMC_FLOOR = 1.75
+MARKET_CMC_CEILING = 6.0
+MARKET_EFFICIENCY_LIMITS = (0.65, 1.1)
+TIPPING_POINT_SHARE = 0.65
+OPENING_HAND = 7
+MANA_SYMBOL_RE = re.compile(r"\{([^}]+)\}")
+ANY_NUMBER_RE = re.compile(r"a deck can have any number of cards named", re.I)
+TAPPED_RE = re.compile(
+    r"enters(?: the battlefield)? tapped",
+    re.I,
+)
+TYPE_KEYS = (
+    "Land",
+    "Creature",
+    "Artifact",
+    "Enchantment",
+    "Instant",
+    "Sorcery",
+    "Planeswalker",
+    "Battle",
 )
 DEFAULT_SEARCH_MAX = 40
 BULK_TYPES = ("oracle_cards", "default_cards", "rulings")
@@ -313,6 +345,12 @@ def oracle_text(card: dict[str, Any]) -> str | None:
     return "\n".join(bits) if bits else None
 
 
+def commander_legal(card: dict[str, Any]) -> str | None:
+    legalities = card.get("legalities") or {}
+    raw = legalities.get("commander")
+    return raw if isinstance(raw, str) else None
+
+
 def project_fields(card: dict[str, Any], fields: list[str]) -> dict[str, Any]:
     out: dict[str, Any] = {}
     for field in fields:
@@ -323,8 +361,126 @@ def project_fields(card: dict[str, Any], fields: list[str]) -> dict[str, Any]:
             faces = card.get("card_faces") or []
             out[field] = faces[0].get("mana_cost") if faces else None
             continue
+        if field == "commander_legal":
+            out[field] = commander_legal(card)
+            continue
+        if field == "price_usd":
+            out[field] = price_usd(card)
+            continue
         out[field] = card.get(field)
     return out
+
+
+def price_usd(card: dict[str, Any]) -> float | None:
+    prices = card.get("prices") or {}
+    for key in ("usd", "usd_foil", "usd_etched"):
+        try:
+            return float(prices[key])
+        except (KeyError, TypeError, ValueError):
+            continue
+    return None
+
+
+def hypergeom_at_least(population: int, successes: int, draws: int, wanted: int) -> float:
+    """P(at least `wanted` successes) when drawing `draws` from `population`."""
+    if wanted <= 0:
+        return 1.0
+    if successes < wanted or draws < wanted or population <= 0:
+        return 0.0
+    draws = min(draws, population)
+    total = math.comb(population, draws)
+    if not total:
+        return 0.0
+    hits = sum(
+        math.comb(successes, i) * math.comb(population - successes, draws - i)
+        for i in range(wanted, min(successes, draws) + 1)
+    )
+    return hits / total
+
+
+def curve_position(value: float, stops: tuple[float, ...], scale: float = 1.0) -> float:
+    """Piecewise-linear position of `value` on `stops`, in units of `scale` per step."""
+    if value <= stops[0]:
+        return 0.0
+    if value > stops[-1]:
+        return (len(stops) - 1) * scale
+    for i in range(len(stops) - 1):
+        if stops[i] <= value < stops[i + 1]:
+            return i * scale + (value - stops[i]) / (stops[i + 1] - stops[i])
+    return (len(stops) - 1) * scale
+
+
+def is_basic(card: dict[str, Any]) -> bool:
+    return "Basic" in (card.get("type_line") or "")
+
+
+def allows_any_number(card: dict[str, Any]) -> bool:
+    text = oracle_text(card) or ""
+    return bool(ANY_NUMBER_RE.search(text))
+
+
+def identity_set(card: dict[str, Any]) -> set[str]:
+    return {c for c in (card.get("color_identity") or []) if isinstance(c, str)}
+
+
+def pip_counts(mana_cost: str | None) -> dict[str, float]:
+    counts = {c: 0.0 for c in "WUBRG"}
+    if not mana_cost:
+        return counts
+    for sym in MANA_SYMBOL_RE.findall(mana_cost):
+        colors = [part for part in sym.split("/") if part in "WUBRG"]
+        if not colors:
+            continue
+        share = 1.0 / len(colors)
+        for color in colors:
+            counts[color] += share
+    return counts
+
+
+def mana_cost_of(card: dict[str, Any]) -> str | None:
+    if card.get("mana_cost"):
+        return card["mana_cost"]
+    faces = card.get("card_faces") or []
+    return faces[0].get("mana_cost") if faces else None
+
+
+def is_land(card: dict[str, Any]) -> bool:
+    return "Land" in (card.get("type_line") or "")
+
+
+def enters_tapped(card: dict[str, Any]) -> bool:
+    text = oracle_text(card) or ""
+    return bool(TAPPED_RE.search(text))
+
+
+def primary_type(card: dict[str, Any]) -> str:
+    type_line = card.get("type_line") or ""
+    front = type_line.split("//", 1)[0]
+    for key in TYPE_KEYS:
+        if key in front:
+            return key
+    return "Other"
+
+
+def fetch_named_cards(names: list[str]) -> tuple[list[dict[str, Any]], list[str]]:
+    cards, missing_items = fetch_collection([{"name": n} for n in names])
+    unresolved: list[str] = []
+    for item in missing_items:
+        n = item.get("name") if isinstance(item, dict) else None
+        if n:
+            unresolved.append(n)
+    return cards, unresolved
+
+
+def unique_deck_names(in_deck: list[dict[str, Any]]) -> list[str]:
+    names: list[str] = []
+    seen: set[str] = set()
+    for card in in_deck:
+        name = card["name"]
+        if name not in seen:
+            seen.add(name)
+            names.append(name)
+    return names
 
 
 def parse_fields(raw: str | None) -> list[str] | None:
@@ -710,21 +866,51 @@ def cmd_validate_deck(args: argparse.Namespace) -> int:
         if not command:
             errors.append("no command-zone cards identified")
 
+    resolve = bool(args.resolve or args.bracket)
     unresolved: list[str] = []
-    if args.resolve and in_deck:
-        names = []
-        seen = set()
-        for c in in_deck:
-            if c["name"] not in seen:
-                seen.add(c["name"])
-                names.append(c["name"])
-        _cards, missing = fetch_collection([{"name": n} for n in names])
-        for item in missing:
-            n = item.get("name") if isinstance(item, dict) else None
-            if n:
-                unresolved.append(n)
+    fetched: list[dict[str, Any]] = []
+    game_changers: list[str] = []
+    if resolve and in_deck:
+        names = unique_deck_names(in_deck)
+        fetched, unresolved = fetch_named_cards(names)
         if unresolved:
             errors.append(f"unresolved names: {', '.join(unresolved)}")
+
+        by_name = {c["name"]: c for c in fetched if c.get("name")}
+        qty_by_name: dict[str, int] = {}
+        for row in in_deck:
+            qty_by_name[row["name"]] = qty_by_name.get(row["name"], 0) + int(row["qty"])
+
+        command_identity: set[str] = set()
+        for row in command:
+            card = by_name.get(row["name"])
+            if card:
+                command_identity |= identity_set(card)
+
+        for name, qty in qty_by_name.items():
+            card = by_name.get(name)
+            if not card:
+                continue
+            if qty > 1 and not is_basic(card) and not allows_any_number(card):
+                errors.append(f"singleton violation: {qty} {name}")
+            legal = commander_legal(card)
+            if legal and legal != "legal":
+                errors.append(f"not legal in Commander: {name} ({legal})")
+            if command_identity:
+                extra = identity_set(card) - command_identity
+                if extra:
+                    errors.append(
+                        f"color identity: {name} has {''.join(sorted(extra))} outside command identity"
+                    )
+            if card.get("game_changer"):
+                game_changers.append(name)
+
+        if args.bracket is not None:
+            cap = BRACKET_GC_CAP.get(args.bracket)
+            if cap is not None and len(game_changers) > cap:
+                errors.append(
+                    f"bracket {args.bracket} allows {cap} Game Changers, found {len(game_changers)}"
+                )
 
     ok = not errors
     json.dump(
@@ -736,6 +922,10 @@ def cmd_validate_deck(args: argparse.Namespace) -> int:
             "excluded": [c["name"] for c in parsed["cards"] if c.get("zone") in {"sideboard", "maybeboard", "out"}],
             "ambiguous_categories": parsed["ambiguous_categories"],
             "unresolved": unresolved,
+            "game_changers": game_changers,
+            "game_changer_count": len(game_changers),
+            "bracket": args.bracket,
+            "bracket_cap": BRACKET_GC_CAP.get(args.bracket) if args.bracket else None,
             "import_block": block,
         },
         sys.stdout,
@@ -744,6 +934,216 @@ def cmd_validate_deck(args: argparse.Namespace) -> int:
     )
     sys.stdout.write("\n")
     return 0 if ok else 2
+
+
+def cmd_deck_stats(args: argparse.Namespace) -> int:
+    parsed = parse_deck_text(read_text(args.file))
+    in_deck = deck_cards(parsed)
+    if not in_deck:
+        print("No in-deck cards parsed", file=sys.stderr)
+        return 1
+
+    names = unique_deck_names(in_deck)
+    fetched, unresolved = fetch_named_cards(names)
+    by_name = {c["name"]: c for c in fetched if c.get("name")}
+
+    histogram = {str(n): 0 for n in range(0, 7)}
+    histogram["7+"] = 0
+    pips = {c: 0.0 for c in "WUBRG"}
+    sources_land = {c: 0 for c in "WUBRG"}
+    sources_nonland = {c: 0 for c in "WUBRG"}
+    types: dict[str, int] = {}
+    game_changers: list[str] = []
+    tapped_lands: list[str] = []
+    early_plays = 0
+    nonland_spells = 0
+    lands = 0
+    mv_total = 0.0
+    spells: list[dict[str, Any]] = []
+
+    for row in in_deck:
+        qty = int(row["qty"])
+        card = by_name.get(row["name"])
+        if not card:
+            continue
+        types[primary_type(card)] = types.get(primary_type(card), 0) + qty
+        if card.get("game_changer"):
+            game_changers.extend([row["name"]] * qty)
+        produced = [c for c in (card.get("produced_mana") or []) if c in "WUBRG"]
+        if is_land(card):
+            lands += qty
+            for color in produced:
+                sources_land[color] += qty
+            if enters_tapped(card):
+                tapped_lands.extend([row["name"]] * qty)
+            continue
+        nonland_spells += qty
+        cmc = card.get("cmc")
+        try:
+            mv = int(float(cmc))
+        except (TypeError, ValueError):
+            mv = 0
+        mv_total += mv * qty
+        if 1 <= mv <= 2:
+            early_plays += qty
+        if mv >= 7:
+            histogram["7+"] += qty
+        else:
+            histogram[str(max(mv, 0))] += qty
+        for color in produced:
+            sources_nonland[color] += qty
+        row_pips = pip_counts(mana_cost_of(card))
+        for color, value in row_pips.items():
+            pips[color] += value * qty
+        spells.append({"name": row["name"], "qty": qty, "mv": mv, "pips": row_pips, "card": card})
+
+    library = sum(int(c["qty"]) for c in in_deck) - sum(
+        int(c["qty"]) for c in in_deck if c.get("zone") == "command"
+    )
+    playable = playability(spells, library, lands, sources_land)
+    tipping = tipping_point(spells)
+
+    out: dict[str, Any] = {
+        "in_deck_count": sum(int(c["qty"]) for c in in_deck),
+        "resolved": len(by_name),
+        "unresolved": unresolved,
+        "mana_value_histogram_nonland": histogram,
+        "early_plays_mv_1_2": early_plays,
+        "nonland_spells": nonland_spells,
+        "lands": lands,
+        "avg_mana_value_nonland": round(mv_total / nonland_spells, 2) if nonland_spells else 0,
+        "tipping_point": tipping,
+        "playability": playable,
+        "pips": {k: round(v, 2) for k, v in pips.items()},
+        "colored_sources": {
+            "land": sources_land,
+            "nonland": sources_nonland,
+        },
+        "tapped_lands_heuristic": {
+            "count": len(tapped_lands),
+            "names": tapped_lands,
+            "note": "oracle-text heuristic for 'enters tapped'",
+        },
+        "game_changers": game_changers,
+        "type_breakdown": types,
+    }
+    if args.market_index:
+        out["market_index"] = market_index(
+            in_deck, by_name, out["avg_mana_value_nonland"], tipping["mana_value"]
+        )
+
+    json.dump(out, sys.stdout, indent=2, ensure_ascii=False)
+    sys.stdout.write("\n")
+    return 0 if not unresolved else 2
+
+
+def tipping_point(spells: list[dict[str, Any]]) -> dict[str, Any]:
+    """Mana value at which the deck has committed TIPPING_POINT_SHARE of its spells."""
+    weights: dict[int, int] = {}
+    for spell in spells:
+        weights[spell["mv"]] = weights.get(spell["mv"], 0) + spell["qty"]
+    total = sum(weights.values())
+    running = 0.0
+    for mv in sorted(weights):
+        running += weights[mv]
+        if running > total * TIPPING_POINT_SHARE:
+            return {
+                "mana_value": mv,
+                "share": TIPPING_POINT_SHARE,
+                "note": f"{TIPPING_POINT_SHARE:.0%} of nonland spells cost {mv} or less",
+            }
+    return {"mana_value": 0, "share": TIPPING_POINT_SHARE, "note": "no nonland spells"}
+
+
+def playability(
+    spells: list[dict[str, Any]],
+    library: int,
+    lands: int,
+    sources: dict[str, int],
+) -> dict[str, Any]:
+    """Chance each spell is castable on curve, on the play, from lands alone.
+
+    Assumes land count and each colour requirement are independent, which
+    overstates decks with many mono-coloured sources. Mana rocks are excluded
+    because they need their own mana first, so this is a floor, not a forecast.
+    """
+    scored: list[dict[str, Any]] = []
+    for spell in spells:
+        mv = max(spell["mv"], 1)
+        seen = OPENING_HAND + mv - 1
+        chance = hypergeom_at_least(library, lands, seen, mv)
+        for color, count in spell["pips"].items():
+            if count > 0:
+                chance *= hypergeom_at_least(library, sources.get(color, 0), seen, math.ceil(count))
+        scored.append({"name": spell["name"], "on_curve_pct": round(100 * chance, 1)})
+    scored.sort(key=lambda s: s["on_curve_pct"])
+    average = sum(s["on_curve_pct"] for s in scored) / len(scored) if scored else 0.0
+    return {
+        "average_on_curve_pct": round(average, 1),
+        "hardest_to_cast": scored[:10],
+        "note": "lands only, on the play, colour and land counts treated as independent",
+    }
+
+
+def market_index(
+    in_deck: list[dict[str, Any]],
+    by_name: dict[str, dict[str, Any]],
+    avg_mv: float,
+    tipping_mv: int,
+) -> dict[str, Any]:
+    """Price-and-popularity index modelled on edhpowerlevel.com.
+
+    This measures what the market thinks of each card, not what the card does
+    in this deck. Use it to find the weakest slots, never as a power level.
+    """
+    rows: list[dict[str, Any]] = []
+    total = 0.0
+    skipped: list[str] = []
+    popularity_only: list[str] = []
+    worst_rank = MARKET_POP_CURVE[-1]
+    for row in in_deck:
+        card = by_name.get(row["name"])
+        if not card:
+            continue
+        qty = int(row["qty"])
+        price = price_usd(card)
+        rank = card.get("edhrec_rank")
+        if price is None and rank is None:
+            skipped.append(row["name"])
+            continue
+        if price is None:
+            popularity_only.append(row["name"])
+        price_score = curve_position(price or 0.0, MARKET_PRICE_CURVE, MARKET_PRICE_WEIGHT)
+        pop_score = curve_position(
+            worst_rank - min(rank, worst_rank) if rank else 0.0,
+            MARKET_POP_CURVE,
+            MARKET_POP_WEIGHT,
+        )
+        impact = (price_score + pop_score) * qty
+        if is_land(card):
+            impact *= MARKET_LAND_FACTOR
+        total += impact
+        rows.append({"name": row["name"], "impact": round(impact, 2), "usd": price, "edhrec_rank": rank})
+
+    span = (MARKET_CMC_CEILING - avg_mv / 2 - tipping_mv / 2) / (MARKET_CMC_CEILING - MARKET_CMC_FLOOR)
+    low, high = MARKET_EFFICIENCY_LIMITS
+    efficiency = low + (high - low) * span
+    score = total * efficiency
+    rows.sort(key=lambda r: r["impact"])
+    return {
+        "total_impact": round(total, 2),
+        "efficiency_multiplier": round(efficiency, 3),
+        "score": round(score, 1),
+        "curve_position": round(curve_position(score, MARKET_POWER_CURVE), 2),
+        "weakest_slots": rows[:15],
+        "skipped_no_price_or_rank": skipped,
+        "popularity_only": {
+            "names": popularity_only,
+            "note": "no price on Scryfall's default printing, so impact is understated; "
+            "run `prices --cheapest` for real money",
+        },
+        "note": "price and EDHREC popularity only; ignores synergy, combos, and deck construction",
+    }
 
 
 def cmd_write_deck(args: argparse.Namespace) -> int:
@@ -876,8 +1276,20 @@ def build_parser() -> argparse.ArgumentParser:
     validate.add_argument("file")
     validate.add_argument("--final", action="store_true")
     validate.add_argument("--resolve", action="store_true")
+    validate.add_argument("--bracket", type=int, choices=(1, 2, 3, 4, 5), default=None)
     validate.add_argument("--warn-excluded", action="store_true")
     validate.set_defaults(func=cmd_validate_deck)
+
+    stats = sub.add_parser(
+        "deck-stats", help="Curve, pips, sources, tipping point, playability, Game Changers"
+    )
+    stats.add_argument("file")
+    stats.add_argument(
+        "--market-index",
+        action="store_true",
+        help="Add a price and popularity index for finding weak slots (not a power level)",
+    )
+    stats.set_defaults(func=cmd_deck_stats)
 
     write = sub.add_parser("write-deck", help="Atomically write a clean import list")
     write.add_argument("dest")

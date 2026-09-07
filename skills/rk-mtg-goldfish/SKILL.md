@@ -1,5 +1,5 @@
 ---
-name: goldfish
+name: rk-mtg-goldfish
 description: "Solitaire and multi-seat Commander goldfishing: shuffle a decklist, take an opening hand, mulligan, and play turns round by round, or run a Monte Carlo mana-base check. Use when the user wants to goldfish a deck, test opening hands, simulate draws turn by turn, playtest solo or with multiple seats, or check land-flood or land-screw odds."
 ---
 
@@ -14,13 +14,13 @@ python scripts/goldfish.py <command>
 python scripts/goldfish.py --help
 ```
 
-This skill only tracks zones (library, hand, battlefield, graveyard, exile, command zone) and turn structure. It does not know Oracle text, mana costs, or legality: it cannot tell you whether a play is legal or what a card does. Look those up with `scryfall` first, then use this skill to move cards between zones as the game plays out.
+This skill only tracks zones (library, hand, battlefield, graveyard, exile, command zone) and turn structure. It does not know Oracle text, mana costs, or legality: it cannot tell you whether a play is legal or what a card does. Look those up with `rk-mtg-scryfall` first, then use this skill to move cards between zones as the game plays out.
 
 ## Decklist input
 
 Any file of `quantity + name` lines works, the same shape the other skills read and write. Optional `[Categories]` tags and set/collector suffixes are ignored for card identity. Pass `-` to read from stdin.
 
-Commander decks usually store the canonical file as plain `quantity + name` lines with no way to mark the command zone (the text block cannot keep that flag, see the `commander-deck-builder` skill). Pass `--commander "Exact Name"` once per commander or background so those cards start in the command zone instead of the shuffled library.
+Commander decks usually store the canonical file as plain `quantity + name` lines with no way to mark the command zone (the text block cannot keep that flag, see the `rk-mtg-commander-deck-builder` skill). Pass `--commander "Exact Name"` once per commander or background so those cards start in the command zone instead of the shuffled library.
 
 ## Play one seat round by round
 
@@ -54,16 +54,24 @@ The state file is plain JSON. Read it directly, or always re-run `state` after e
 
 `stats` runs a fast Monte Carlo simulation over many random shuffles instead of a single playthrough. It never touches a state file.
 
-This skill has no Oracle data of its own, so it does not know which cards are lands. Get that from `scryfall` instead of guessing or asking the user to list every land by hand:
+This skill has no Oracle data of its own, so it does not know which cards are lands. Get that from `rk-mtg-scryfall` instead of guessing or asking the user to list every land by hand:
 
 ```bash
-python ../scryfall/scripts/scryfall.py collection deck.txt --fields name,type_line > types.json
+python ../rk-mtg-scryfall/scripts/scryfall.py collection deck.txt --fields name,type_line > types.json
 python scripts/goldfish.py stats deck.txt --types types.json --iterations 5000 --turns 8
 ```
 
-`--types PATH` reads that scryfall `collection` (or `search`) JSON and counts every card whose `type_line` contains `Land` as a land, basic or not. Use `--land NAME` instead, or in addition, only for a card that should count as a land for this check despite its type line (a land-cycling card kept in hand as a land substitute, for example), or when `scryfall` cannot be run. At least one of `--types` or `--land` is required.
+`--types PATH` reads that scryfall `collection` (or `search`) JSON and counts every card whose `type_line` contains `Land` as a land, basic or not. Use `--land NAME` instead, or in addition, only for a card that should count as a land for this check despite its type line (a land-cycling card kept in hand as a land substitute, for example), or when `rk-mtg-scryfall` cannot be run. At least one of `--types` or `--land` is required.
 
 It reports the average lands in the opening hand, the share of opening hands with 0-1 or 6-plus lands, and the average cumulative lands seen by each turn. Use it to judge whether a land count or curve is likely to flood or screw before playing out individual games.
+
+It also reports a sweet spot: the share of games that are neither screwed nor flooded. The defaults ask for four mana by turn five and call six-plus lands by turn four a flood. Set the target to the deck's real curve, not the default: use the tipping point from `rk-mtg-scryfall` `deck-stats`, which is the mana value that gets 65% of the deck online.
+
+```bash
+python scripts/goldfish.py stats deck.txt --types types.json --mana-target 3 --screw-tolerance 1 --flood-tolerance 2
+```
+
+`sweet_spot_definition` in the output states the exact thresholds used. Quote it whenever you quote the percentage, because the number is meaningless without it.
 
 ## Multiplayer goldfishing
 

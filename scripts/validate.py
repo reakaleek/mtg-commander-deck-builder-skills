@@ -11,22 +11,23 @@ ROOT = Path(__file__).resolve().parents[1]
 SKILLS = ROOT / "skills"
 
 REQUIRED = {
-    "commander-deck-builder": (
+    "rk-mtg-commander-deck-builder": (
         "SKILL.md",
-        "guides.md",
         "fundamentals.md",
         "review-framework.md",
     ),
-    "commander-deck-playbook": ("SKILL.md", "playbook.md"),
-    "scryfall": ("SKILL.md", "syntax.md", "scripts/scryfall.py"),
-    "edhrec": ("SKILL.md", "scripts/edhrec.py"),
+    "rk-mtg-commander-deck-playbook": ("SKILL.md", "playbook.md"),
+    "rk-mtg-scryfall": ("SKILL.md", "syntax.md", "scripts/scryfall.py"),
+    "rk-mtg-edhrec": ("SKILL.md", "scripts/edhrec.py"),
+    "rk-mtg-archidekt": ("SKILL.md", "scripts/archidekt.py"),
+    "rk-mtg-goldfish": ("SKILL.md", "scripts/goldfish.py"),
+    "rk-mtg-spellbook": ("SKILL.md", "scripts/spellbook.py"),
 }
 
 BUILDER_DOCS = [
-    SKILLS / "commander-deck-builder" / "SKILL.md",
-    SKILLS / "commander-deck-builder" / "guides.md",
-    SKILLS / "commander-deck-playbook" / "SKILL.md",
-    SKILLS / "commander-deck-playbook" / "playbook.md",
+    SKILLS / "rk-mtg-commander-deck-builder" / "SKILL.md",
+    SKILLS / "rk-mtg-commander-deck-playbook" / "SKILL.md",
+    SKILLS / "rk-mtg-commander-deck-playbook" / "playbook.md",
 ]
 
 BANNED_SUBSTRINGS = (
@@ -140,11 +141,13 @@ def main() -> int:
             if banned in text:
                 fail(errors, f"{rel} contains {banned}")
 
-    builder = SKILLS / "commander-deck-builder" / "SKILL.md"
+    builder = SKILLS / "rk-mtg-commander-deck-builder" / "SKILL.md"
     if builder.is_file():
         text = builder.read_text(encoding="utf-8")
-        if "scryfall" not in text or "edhrec" not in text:
-            fail(errors, "builder SKILL.md must name both scryfall and edhrec")
+        if "rk-mtg-scryfall" not in text or "rk-mtg-edhrec" not in text:
+            fail(errors, "builder SKILL.md must name both rk-mtg-scryfall and rk-mtg-edhrec")
+        if "rk-mtg-goldfish" not in text or "rk-mtg-spellbook" not in text:
+            fail(errors, "builder SKILL.md must name rk-mtg-goldfish and rk-mtg-spellbook")
         if "stop" not in text.lower():
             fail(errors, "builder SKILL.md must stop when helpers are missing")
         if "Archidekt import" not in text:
@@ -154,13 +157,13 @@ def main() -> int:
         if "canonical" not in text.lower():
             fail(errors, "builder SKILL.md must document the canonical deck file")
 
-    playbook = SKILLS / "commander-deck-playbook" / "SKILL.md"
+    playbook = SKILLS / "rk-mtg-commander-deck-playbook" / "SKILL.md"
     if playbook.is_file():
         text = playbook.read_text(encoding="utf-8")
-        if "scryfall" not in text:
-            fail(errors, "playbook SKILL.md must name scryfall")
+        if "rk-mtg-scryfall" not in text:
+            fail(errors, "playbook SKILL.md must name rk-mtg-scryfall")
         if "stop" not in text.lower():
-            fail(errors, "playbook SKILL.md must stop when scryfall is missing")
+            fail(errors, "playbook SKILL.md must stop when rk-mtg-scryfall is missing")
         if "never write" not in text.lower() and "must never" not in text.lower() and "Never write" not in text:
             fail(errors, "playbook SKILL.md must refuse to rewrite the deck file")
 
