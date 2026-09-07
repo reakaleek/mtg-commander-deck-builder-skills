@@ -1,6 +1,6 @@
 # Commander deck builder skills
 
-Five Agent Skills for building, reviewing, and piloting Commander decks. Archidekt text is the list format. Install the whole repo. The Skills CLI does not resolve skill-to-skill dependencies, so installing only a high-level skill is incomplete.
+Six Agent Skills for building, reviewing, piloting, and goldfishing Commander decks. Archidekt text is the list format. Install the whole repo. The Skills CLI does not resolve skill-to-skill dependencies, so installing only a high-level skill is incomplete.
 
 The repository is private. GitHub auth is required.
 
@@ -9,7 +9,7 @@ npx skills add reakaleek/mtg-commander-deck-builder-skills
 npx skills add reakaleek/mtg-commander-deck-builder-skills --list
 ```
 
-Confirm the list shows all five names: `commander-deck-builder`, `commander-deck-playbook`, `scryfall`, `edhrec`, and `archidekt`.
+Confirm the list shows all six names: `commander-deck-builder`, `commander-deck-playbook`, `scryfall`, `edhrec`, `archidekt`, and `goldfish`.
 
 ## Usage
 
@@ -57,6 +57,14 @@ The playbook explains the submitted list. It does not replace cards. If a line i
 
 This skill needs `scryfall` so it can parse the list and read Oracle text. It does not need `edhrec`. Metagame synergy is for choosing cards, not for teaching the cards already in the file.
 
+### Goldfish or simulate a deck
+
+Ask to goldfish a deck, test opening hands, play out turns, or run a mana-base check. `goldfish` should start.
+
+Bring the canonical file or a decklist, and say which cards are commanders if the file cannot mark them. For a turn-by-turn session it shuffles the library, deals an opening hand, and lets you mulligan, keep, and advance turns one command at a time, moving cards between hand, battlefield, graveyard, exile, and the command zone as you play them. For a fast mana-base check it runs many random shuffles instead and reports opening-hand and per-turn land odds; that check needs `scryfall` first to identify which cards are lands. A 4-player simulation is one seat per decklist, each with its own state file.
+
+This skill does not know Oracle text, mana costs, or legality on its own. It only tracks zones and turns.
+
 ### Look up cards, prices, EDHREC pages, or an Archidekt URL
 
 Ask about a card, a search, a price, or an Archidekt parse. `scryfall` should start.
@@ -89,6 +97,12 @@ These are job shapes. Fill in your commander, list, path, and budget when you ha
 
 > How do I pilot this deck? I want combo steps and a recovery plan. Save the playbook only if I ask.
 
+**Goldfish**
+
+> Goldfish this deck. Draw an opening hand, let me mulligan, then play out turns as I tell you what I cast.
+
+> Run a mana-base check on this list. How often do I flood or get stuck on lands over the first 8 turns?
+
 **Lookups**
 
 > Price this list in my currency using cheapest prints unless a printing is supplied.
@@ -108,6 +122,7 @@ These are job shapes. Fill in your commander, list, path, and budget when you ha
 | `scryfall` | nothing else | Oracle, legality, search, prices, parse, validate, write |
 | `edhrec` | nothing else | Unofficial inclusion, synergy, and average-deck JSON |
 | `archidekt` | nothing else | Derive the API URL from a deck URL and fetch that deck's JSON |
+| `goldfish` | `scryfall` for the mana-base check only | Shuffle, mulligan, and play turns round by round, or run a mana-base Monte Carlo check |
 
 If a high-level skill stops and tells you to install the full repo, a helper is missing. Run the install command above again. Do not point the agent at a guessed disk path.
 
@@ -118,3 +133,4 @@ If a high-level skill stops and tells you to install the full repo, a helper is 
 - `scryfall` looks up Oracle text, legality, searches, prices, and Archidekt parse or validate
 - `edhrec` reads unofficial `json.edhrec.com` inclusion, synergy, and average-deck pages
 - `archidekt` derives the API URL from an Archidekt deck URL and fetches that deck's JSON
+- `goldfish` shuffles a decklist and plays it out round by round, or runs a mana-base Monte Carlo check (using `scryfall` to identify lands)
