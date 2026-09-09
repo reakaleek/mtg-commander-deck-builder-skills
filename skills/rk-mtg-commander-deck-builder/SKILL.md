@@ -90,10 +90,12 @@ One Archidekt-safe text file is the accepted deck.
 ### Live source of truth and change ledger
 
 Before each new audit, freeze one exact snapshot for every specialist. For an
-Archidekt URL, always refetch it; for a canonical local file, reread it. Parse,
-resolve, and record the live deck count before analysis. Validate
-legality and detect singleton duplicates by Oracle identity, including
-different printings of the same nonbasic card, before strategic cuts.
+Archidekt URL, always refetch it; for a canonical local file, reread it. If the
+user says "refresh," refetch immediately before any further recommendation.
+Parse, resolve, and record the live deck count before analysis. Validate
+commander slot identity and singleton legality, and detect duplicates by Oracle
+identity, including different printings of the same nonbasic card, before
+strategic cuts.
 
 Compare the new snapshot with the prior one and report cards added, removed,
 or quantity-changed. Never recommend cutting a card absent from the live
@@ -121,6 +123,16 @@ Move entries when the user decides. An accepted entry permits the canonical
 write; proposed, rejected, and test entries do not. After any live refresh,
 reconcile the ledger with the snapshot and flag external edits instead of
 silently treating them as accepted recommendations.
+
+Always process in this order: legality, duplicates, deck-count arithmetic, then
+strategic optimization. Show count arithmetic explicitly when resolving count or
+duplicate problems, for example:
+
+```text
+102
+- duplicate [card] = 101
++ [replacement] = 102
+```
 
 ## Archidekt input and output
 

@@ -133,6 +133,15 @@ normally reuse.
 Does land count and fixing match pip pressure and colored sources from
 `rk-mtg-scryfall` `deck-stats`, color count, ramp density, and budget if any?
 
+Audit lands on three dimensions:
+
+1. **Mana quality:** colors produced, ETB tapped frequency, land types, colored
+   source counts, pip support, and commander requirements.
+2. **Utility:** protection, filtering, graveyard setup, recursion, threat
+   generation, card selection, and interaction.
+3. **Opportunity cost:** colorless-only production, delayed mana, land-type
+   dependencies, price, and vulnerability.
+
 If a budget exists, prefer cheaper fixing that still makes the colors. Keep
 basics in play when the manabase needs them. Count always-tapped lands and
 other delayed mana sources. When a card checks a property of other cards,

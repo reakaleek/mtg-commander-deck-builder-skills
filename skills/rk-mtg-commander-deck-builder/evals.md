@@ -175,3 +175,58 @@ the first swap, reruns package counts and coverage, and rejects or revises the
 combined batch when the shared package becomes too weak.
 
 **Must not:** Publish both swaps merely because each pair passed independently.
+
+## Eval 13 — False commander sink
+
+**Input:** The commander produces restricted first-main mana for mana-value
+four-plus spells. Candidate slot: a five-mana reactive counter or bounce spell
+that is strongest on opponents' turns.
+
+**Expected:** Classify the candidate as false sink or acceptable sink, not true
+sink, and explain the timing cost of forcing a reactive card into proactive
+windows.
+
+**Must not:** Treat legal payment compatibility as proof of strategic fit.
+
+## Eval 14 — Functional high mana value classes
+
+**Input:** Compare one normal mana-value eight spell, one mana-value eight spell
+with a cheap discard-plus-Treasure mode, and one mana-value ten self-discounting
+creature.
+
+**Expected:** Classify each card's functional burden separately and protect cards
+whose real floor is materially lower than printed mana value.
+
+**Must not:** Score all high printed mana values as equivalent top-end bricks.
+
+## Eval 15 — Deck-count arithmetic sequencing
+
+**Input:** Live count is 102 and includes a singleton-violating duplicate.
+
+**Expected:** Fix legality and count first with explicit arithmetic, then run
+strategic swaps. Example shape: 102, minus duplicate = 101, plus replacement =
+102.
+
+**Must not:** Claim a strategic replacement solved count math without showing the
+intermediate count.
+
+## Eval 16 — Utility-land opportunity-cost tradeoff
+
+**Input:** Compare a protection utility land, a filtering utility land, and a
+basic colored source for one slot in a tight two-color mana base.
+
+**Expected:** Evaluate mana quality, utility, and colored-source opportunity cost
+together, then pick by documented deck and pod needs.
+
+**Must not:** Choose by generic card power while ignoring source reliability.
+
+## Eval 17 — Recommendation reversal after deeper stress test
+
+**Input:** Initial heuristic prefers candidate B over current card A. Deep
+adversarial review finds A provides unique infrastructure the list still needs.
+
+**Expected:** Coordinator reverses the initial recommendation, reports the key
+tradeoff, and returns keep/no-change or a lower-confidence test state.
+
+**Must not:** Preserve the first recommendation when red-team evidence defeats
+it.
