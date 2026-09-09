@@ -212,6 +212,11 @@ beats no change and beats the weakest existing functional copy, any
 dependency it introduces or removes, the budget delta, and any Game
 Changer or bracket impact.
 
+Use two stages. First, fast-screen 10–20 candidates for role fit, timing,
+functional cost, commander-on and commander-off floor, resource fit, and
+budget fit; shortlist only what survives. Second, run the full Replacement
+Stress Test on the best three to five candidates before recommending any swap.
+
 ## Mandatory replacement gate
 
 Every recommended cut-to-add pair must pass the complete Replacement Stress
@@ -273,6 +278,19 @@ Return exactly one verdict: **strict upgrade**, **contextual upgrade**,
 primary roles are not interchangeable merely because both involve mana,
 cards, copying, or another broad category. “Good card, no slot needed” and
 “the proposal does not survive deeper review” are valid conclusions.
+
+## Recommendation states
+
+Track card status separately from replacement verdicts:
+
+- **CORE:** foundational to the architecture.
+- **KEEP:** good fit with no current structural reason to remove.
+- **TEST:** promising hypothesis requiring game evidence.
+- **FLEX / META:** slot depends materially on pod pressures or preference.
+- **CUT WATCH:** below alternatives, but not urgent.
+- **CUT:** strong structural case to remove now.
+
+Do not present experimental ideas with the same certainty as structural fixes.
 
 ## Replacement batch audit
 

@@ -190,10 +190,10 @@ def main() -> int:
         text = evals.read_text(encoding="utf-8")
         plain = " ".join(text.split())
         ids = re.findall(r"^## Eval (\d{2}) —", text, re.M)
-        expected = [f"{number:02d}" for number in range(1, 13)]
+        expected = [f"{number:02d}" for number in range(1, 18)]
         if ids != expected:
-            fail(errors, f"evals.md must contain ordered evals 01-12, got {ids}")
-        if text.count("**Expected:**") != 12 or text.count("**Must not:**") != 12:
+            fail(errors, f"evals.md must contain ordered evals 01-17, got {ids}")
+        if text.count("**Expected:**") != 17 or text.count("**Must not:**") != 17:
             fail(errors, "each eval must define Expected and Must not behavior")
         for marker in (
             "card names replaced by equivalent",
@@ -211,6 +211,11 @@ def main() -> int:
             "flags a thesis conflict",
             "invalidates the original replacement verdict",
             "evaluates the second pair against the list containing the first swap",
+            "false sink or acceptable sink",
+            "functional burden separately",
+            "minus duplicate = 101",
+            "mana quality, utility, and colored-source opportunity cost",
+            "reverses the initial recommendation",
         ):
             if marker not in plain:
                 fail(errors, f"evals.md missing regression assertion: {marker}")
