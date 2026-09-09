@@ -212,11 +212,35 @@ beats no change and beats the weakest existing functional copy, any
 dependency it introduces or removes, the budget delta, and any Game
 Changer or bracket impact.
 
+## Mandatory replacement gate
+
+Every recommended cut-to-add pair must pass the complete Replacement Stress
+Test before it appears in a report, canvas, buy list, or canonical update.
+Small, obvious, budget-driven, and constraint-mandated swaps are not
+exceptions.
+
+The user-facing recommendation must include:
+
+- the strongest case for keeping the current card;
+- capability lost and capability gained;
+- whether the lost capability remains adequately covered;
+- commander-on and commander-off performance;
+- opening-hand quality and floor when behind;
+- the replacement's new failure mode; and
+- exactly one permitted verdict.
+
+A specialist's private analysis does not satisfy this gate. The coordinator
+must expose the decisive tradeoffs in the report.
+
+If the user changes a constraint, pod agreement, deck thesis, budget, or
+intended play pattern, invalidate every affected replacement verdict and rerun
+the test before updating the recommendation.
+
 ## Replacement Stress Test
 
-Do not call an important replacement an upgrade until the coordinator or
-Replacement Auditor compares the pair. Start with the strongest possible case
-for keeping the current card, then evaluate:
+Do not recommend a replacement until the coordinator or Replacement Auditor
+compares the pair. Start with the strongest possible case for keeping the
+current card, then evaluate:
 
 1. current card's primary role;
 2. current card's secondary roles;
@@ -249,6 +273,24 @@ Return exactly one verdict: **strict upgrade**, **contextual upgrade**,
 primary roles are not interchangeable merely because both involve mana,
 cards, copying, or another broad category. “Good card, no slot needed” and
 “the proposal does not survive deeper review” are valid conclusions.
+
+## Replacement batch audit
+
+Evaluate swaps sequentially against the deck produced by the preceding swaps,
+not only against the original snapshot. After every pair passes individually,
+audit the complete proposed batch:
+
+1. Recount every functional category.
+2. Recheck package density and redundancy.
+3. Identify capabilities weakened by multiple cuts.
+4. Recheck win conditions, interaction coverage, mana, budget, bracket, and
+   table rules.
+5. Confirm that the combined changes preserve the deck thesis.
+6. Remove or revise any individually acceptable swap that becomes harmful in
+   combination.
+
+An individually valid swap can fail the batch audit. Do not publish the batch
+until both levels pass.
 
 ## Budget efficiency
 

@@ -129,7 +129,7 @@ for keeping the current card. Return one verdict: **strict upgrade**,
 recommended**. “No change” and “the cards perform different roles” are
 successful outcomes.
 
-For each important final swap, include:
+For every final swap, include:
 
 ```text
 Proposed:
@@ -186,7 +186,11 @@ coordinator:
 5. rejects candidates that solve no primary problem or duplicate adequate
    coverage;
 6. may reverse its initial recommendation when red-team evidence defeats it;
-7. owns every final recommendation and all canonical-file writes.
+7. invalidates and reruns affected replacement verdicts when a constraint, pod
+   agreement, deck thesis, budget, or intended play pattern changes;
+8. evaluates swaps sequentially against the list produced by preceding swaps;
+9. runs the Replacement Batch Audit before publishing the combined batch; and
+10. owns every final recommendation and all canonical-file writes.
 
 Prefer a two-to-five-card test batch after synthesis. Record a hypothesis,
 success signal, and failure signal for each test. After a meaningful batch,
