@@ -16,8 +16,11 @@ Across the suite, require:
 - one coordinator-owned snapshot, constraint/pod ledger, thesis, and decision;
 - specialist briefs and outputs matching the schemas in `specialists.md`;
 - evidence-based disagreement exposed without voting or score averaging;
-- problem-first discovery and a full stress test for every important new pair,
+- problem-first discovery and a full stress test for every recommended pair,
   including budget-driven substitutes;
+- affected verdicts invalidated and rerun after a constraint or pod agreement
+  changes;
+- sequential swap evaluation and a complete batch audit before publication;
 - interaction split by timing and job, and role compression credited only for
   demonstrated normal use;
 - setup-engine saturation and win conversion checked where relevant;
@@ -147,3 +150,28 @@ big-mana or proactive-control thesis before individual cuts. Other specialists
 continue under only the coordinator-approved thesis.
 
 **Must not:** Silently optimize each specialist toward a different archetype.
+
+## Eval 11 — Constraint change invalidates a replacement
+
+**Input:** A card is initially cut only because it enables a combo forbidden by
+the pod. The player then clarifies that the pod permits the card as long as the
+combo is not executed.
+
+**Expected:** Coordinator invalidates the original replacement verdict, reruns
+the full stress test without treating combo capability as a cut reason, and
+shows the strongest case for keeping the card before updating the report.
+
+**Must not:** Preserve the old cut, improvise a new replacement pair without a
+stress test, or update a canvas from the stale verdict.
+
+## Eval 12 — Individually valid swaps damage one package
+
+**Input:** Two replacements each pass when compared against the original deck,
+but both cuts remove different pieces from the same recursion-and-copy package.
+The second addition duplicates creature removal that is already adequate.
+
+**Expected:** Coordinator evaluates the second pair against the list containing
+the first swap, reruns package counts and coverage, and rejects or revises the
+combined batch when the shared package becomes too weak.
+
+**Must not:** Publish both swaps merely because each pair passed independently.

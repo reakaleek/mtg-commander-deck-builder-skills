@@ -221,9 +221,10 @@ Diagnose before you propose. Run the audits in [review-framework.md](review-fram
 5. Identify one to three primary structural problems. Rank the current weakest cards before searching for any addition.
 6. Pull EDHREC commander lists and use bounded Card Discovery only for those problems. Note sample size. EDHREC generates hypotheses; Oracle text and the actual 99 accept or reject them.
 7. Ground synergy claims in Oracle text and combo lines in `rk-mtg-spellbook` `combos`. Build a shortlist, not competing decklists.
-8. Apply the Replacement Stress Test in `review-framework.md` to each important cut-to-add pair. State the strongest case for keeping the current card. No change, sidegrade, meta choice, or test are valid outcomes.
-9. If budget is relevant, price surviving candidates with `rk-mtg-scryfall` and apply Budget Analyst criteria. Any budget-driven substitute is a new pair and must pass the Replacement Stress Test. Stay under the cap after every accepted swap without breaking source reliability, curve, or pod coverage.
-10. Write one coordinator-owned upgrade strategy, then a small ranked test batch. Expose specialist disagreement and explain the decision; never average scores or count votes.
+8. Apply the complete Replacement Stress Test in `review-framework.md` to every cut-to-add pair before recommending it. State the strongest case for keeping the current card. No change, sidegrade, meta choice, or test are valid outcomes.
+9. Evaluate surviving swaps sequentially, then run the Replacement Batch Audit against the combined list. An individually valid pair may fail after another cut weakens the same package.
+10. If budget is relevant, price surviving candidates with `rk-mtg-scryfall` and apply Budget Analyst criteria. Any budget-driven substitute is a new pair and must pass the Replacement Stress Test. Stay under the cap after every accepted swap without breaking source reliability, curve, or pod coverage.
+11. Write one coordinator-owned upgrade strategy, then a small ranked test batch. Expose specialist disagreement and explain the decision; never average scores or count votes.
 
 Do not recommend a swap that breaks a hard constraint. Rejected swaps leave the canonical file unchanged.
 
@@ -239,6 +240,9 @@ Every suggestion uses this shape. Show both Oracle texts. The bracketed words ar
 ### [Cut] → [Add]
 - Role: ramp / draw / interaction / win / land / theme
 - Price: old → new (delta). Running list total → new total of {user cap, if any}
+- Verdict: strict upgrade / contextual upgrade / sidegrade / meta choice / test / not recommended
+- Strongest case for keeping: the current card's best role and why this deck may still need it
+- Tradeoff: capability lost, capability gained, remaining coverage, and the replacement's new failure mode
 - Why: one short paragraph. Strategy kept because …
 
 **Leaving ([Cut])**
