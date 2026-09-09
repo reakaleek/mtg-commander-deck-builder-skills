@@ -88,11 +88,45 @@ If the commander adds mana, a discount, or permission to cast that is limited
 by phase, spell type, or zone, list what that resource cannot pay for. Do not
 count it as generic mana or as interaction on other players' turns.
 
-## Recursion
+Classify each apparent sink by how it uses the resource:
 
-Which zone does the list reuse: graveyard, exile, or battlefield? Do proposed
-adds leave cards in a zone this list cannot recover? If yes, say so. Do not
-add a rescue package for a rare miss in the wrong zone.
+- **True sink:** naturally uses the resource at the right phase, timing, type,
+  and board state while advancing the thesis.
+- **Acceptable sink:** can use it productively, but with a timing, dependency,
+  or opportunity-cost compromise.
+- **False sink:** is technically legal to pay for but usually wants a different
+  phase, reactive window, target, or game state.
+
+Legal compatibility is not strategic compatibility. Report how often the
+resource is likely to go unused and which cards convert it into persistent
+advantage or a win.
+
+## Functional cost and two curves
+
+Printed mana value is only the starting point. Classify expensive cards as
+hard top-end, commander-assisted, self-discounting, modal or cheap alternate
+mode, or independently discounted. Do not give commander assistance to cards
+whose timing or type cannot use it.
+
+Describe both the **native curve**, what the deck can cast without its
+commander, and the **commander-assisted curve**, after only valid assistance.
+Then test the commander being removed twice. Commander acceleration should be
+an advantage, not life support for hands that otherwise cannot function.
+
+## Resource economy
+
+Identify the deck's reusable resources and map:
+
+- generators that create or stock the resource;
+- converters that turn it into mana, cards, board presence, or damage;
+- consumers that spend or exile it;
+- recovery that restores it after disruption.
+
+For graveyard, exile, library, counters, tokens, cards in hand, or other
+resources, flag packages that compete for the same finite material. Proposed
+adds must not consume the resource another core package expects to recover.
+Do not add a rescue package for a rare miss in a zone the deck does not
+normally reuse.
 
 ## Mana base
 
@@ -110,6 +144,12 @@ How does this list actually close a game? Do those lines survive the table
 rules they stated? Tutors count only if the pieces they find are present.
 "Good cards" is not a win condition. Ground catalogued combos with
 `rk-mtg-spellbook` `combos`.
+
+Separate setup engines, immediate engines, payoffs, and finishers. Too many
+cards whose value is only “future spells become better” can make a synergistic
+deck slow. Once the deck is ahead, state how it converts that advantage into a
+win, how many turns that normally takes, and what interaction interrupts it.
+Card advantage, inevitability, and closing speed are different claims.
 
 ## Playtesting and iteration
 
@@ -154,6 +194,19 @@ These checks sit on top of the baseline. They decide whether a card belongs.
     one primary role. Judge cheap versus expensive answers and the stated
     failure, not the raw interaction total. If a card is cut, name the
     capability that leaves with it.
+11. **Split interaction by timing and job.** Track cheap emergency, broad
+    flexible, proactive, sweepers, and expensive reactive interaction
+    separately. A healthy total can hide missing early or stack interaction.
+12. **Meta exceptions are explicit.** A card need not share commander text
+    when it repeatedly solves a documented pod failure. Label it a local-meta
+    necessity and do not cut it for low synergy alone.
+13. **Compress demonstrated roles.** Prefer a card that solves multiple real
+    needs in normal play, but do not credit flavor text, rare modes, or
+    hypothetical overlap.
+14. **Preserve deck identity.** Optimize within enjoyment, favorite cards,
+    intended archetype and power, local pod, budget, and desired play pattern.
+    Before a large package, ask whether accepting every recommendation still
+    leaves the deck the player wanted.
 
 ## Required build or analysis output
 

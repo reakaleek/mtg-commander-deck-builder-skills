@@ -72,6 +72,15 @@ contradictions (a token payoff with sparse token generation, proliferate
 with too few counters, sacrifice payoffs with too few outlets, graveyard
 recursion whose key effects exile themselves).
 
+## Resource-economy audit
+
+Use the generator, converter, consumer, and recovery map in
+`fundamentals.md`. Count only resources the current list can repeatedly use.
+Flag packages that consume the same graveyard, exile, hand, token, counter, or
+library material; then test what remains after the most important consumer
+resolves. A card can be individually synergistic while making the whole
+economy less reliable.
+
 ## Engine / enabler / payoff / theme classification
 
 For strategy cards, classify as an engine, an enabler, a payoff, a redundant
@@ -79,6 +88,11 @@ functional copy, or a low-leverage synergy slot that only matches a theme.
 A card should not survive review merely because it shares a tribe, mentions
 the deck's keyword, or scores high on EDHREC inclusion. Call these slots
 "theme-only" or "low-leverage," not "cute."
+
+Also split setup engines, which improve later actions, from immediate engines
+that replace value now. Compare setup density with payoff and finisher density.
+When several permanents all need another spell and another turn to matter,
+flag setup-engine saturation even when every card is on theme.
 
 ## Redundancy audit
 
@@ -126,6 +140,19 @@ Feed the tipping point to `rk-mtg-goldfish` `stats` as `--mana-target` and read
 the sweet spot alongside the opening-hand and per-turn land odds. Quote the
 thresholds with the number.
 
+Build a top-end budget by classifying every expensive spell using the
+functional-cost classes in `fundamentals.md`. Report a native curve and a
+commander-assisted curve; never subtract commander mana from a spell that
+cannot strategically use it. Repeat the practical curve test after the
+commander is removed twice. Identify stranded hard top-end separately from
+modal, self-discounting, and independently discounted cards that retain a
+usable floor.
+
+For critical roles, count functional copies rather than names and use a stated
+draw model when useful. Report the chance of seeing at least one relevant copy
+by the turn that role matters. Do not hide timing, conditionality, or
+commander-dependence inside a redundancy count.
+
 ## Opening-hand and goldfish audit
 
 This is a heuristic, not a real multiplayer game. Where practical, reason
@@ -138,6 +165,10 @@ commander lands, cards left in hand, and whether the deck can hold up
 interaction. Optional: `rk-mtg-goldfish` `new` for two or three sample hands,
 labelled as samples. Before sending a swap list, ask whether those swaps
 would have changed the stated failure; if not, revise them.
+
+Rate candidate swaps for opening-hand quality as well as late-game ceiling. A
+replacement that is powerful only after the commander and an engine are
+online can worsen the exact hands the deck needs to repair.
 
 ## Adversarial scenario audit
 
@@ -181,6 +212,44 @@ beats no change and beats the weakest existing functional copy, any
 dependency it introduces or removes, the budget delta, and any Game
 Changer or bracket impact.
 
+## Replacement Stress Test
+
+Do not call an important replacement an upgrade until the coordinator or
+Replacement Auditor compares the pair. Start with the strongest possible case
+for keeping the current card, then evaluate:
+
+1. current card's primary role;
+2. current card's secondary roles;
+3. replacement's primary role;
+4. capability lost by making the cut;
+5. capability gained;
+6. whether the lost capability is covered elsewhere;
+7. normal mana cost;
+8. effective mana cost with valid commander assistance;
+9. performance without the commander;
+10. timing compatibility;
+11. opening-hand quality;
+12. floor when behind;
+13. ceiling when ahead;
+14. immediate versus delayed impact;
+15. persistent versus one-shot value;
+16. resource-economy interactions;
+17. engine and package interactions;
+18. pod or meta effect;
+19. budget impact; and
+20. the new failure mode introduced.
+
+Pairwise comparisons matter when cards compete for the same engine slot:
+compare their complete role packages, costs before payoff, resilience by
+permanent type, and local removal patterns rather than rating each in
+isolation.
+
+Return exactly one verdict: **strict upgrade**, **contextual upgrade**,
+**sidegrade**, **meta choice**, **test**, or **not recommended**. Different
+primary roles are not interchangeable merely because both involve mana,
+cards, copying, or another broad category. “Good card, no slot needed” and
+“the proposal does not survive deeper review” are valid conclusions.
+
 ## Budget efficiency
 
 When a budget exists, judge marginal improvement per unit of currency
@@ -189,6 +258,11 @@ say otherwise: essential engine pieces, unique role players, functional
 consistency, interaction, mana-base upgrades, then luxury staples. Do not
 fund premium lands by skipping a demonstrated functional gap unless mana
 reliability is the demonstrated problem.
+
+For a budget-driven land replacement, rerun colored source, pip, tapped-land,
+and commander-casting checks. State whether the money buys unique function or
+only marginal fixing or efficiency; never save money by silently creating a
+new mana failure.
 
 ## Legality, bracket, and Game Changer audit
 

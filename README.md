@@ -43,6 +43,8 @@ Bring a pasted Archidekt export, an Archidekt deck URL, or a local file. If you 
 
 The review diagnoses the deck as a system before touching cards: commander fit, structural counts, package reliability, dependencies, win conditions, and an interaction answer matrix, scaled to how deep your request goes. Only after that does it rank the current weakest slots and write an upgrade strategy first, then ranked cut-to-add swaps. Each swap shows both Oracle texts. Proposed swaps stay in the report. The file changes only after you accept a swap or a batch.
 
+Complex reviews may delegate bounded systems, mana, meta, discovery, replacement, or budget analysis. One coordinator keeps the live deck snapshot, thesis, constraints, and change ledger; specialists neither build competing lists nor vote on the result. Important replacements receive an adversarial stress test, and “no change” is a valid recommendation.
+
 You get two copy-only Archidekt blocks: the full accepted list, then a **buy list** of only the cards you still need to purchase. Say which cards you already own, and whether a proxy counts as owned. The buy list is not written into the canonical deck file.
 
 If you set a budget, prices come from `rk-mtg-scryfall` in the currency you named. Additional-spend budgets price the buy list. Missing prices stay unknown. Low EDHREC inclusion is not a cut reason by itself.
