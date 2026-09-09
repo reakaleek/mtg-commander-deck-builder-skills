@@ -15,6 +15,8 @@ REQUIRED = {
         "SKILL.md",
         "fundamentals.md",
         "review-framework.md",
+        "specialists.md",
+        "evals.md",
     ),
     "rk-mtg-commander-deck-playbook": ("SKILL.md", "playbook.md"),
     "rk-mtg-scryfall": ("SKILL.md", "syntax.md", "scripts/scryfall.py"),
@@ -156,6 +158,60 @@ def main() -> int:
             fail(errors, "builder SKILL.md must require a purchase-only Archidekt buy list")
         if "canonical" not in text.lower():
             fail(errors, "builder SKILL.md must document the canonical deck file")
+        if "[specialists.md](specialists.md)" not in text:
+            fail(errors, "builder SKILL.md must link the specialist architecture")
+        if "Replacement Stress Test" not in text:
+            fail(errors, "builder SKILL.md must require replacement stress testing")
+
+    specialists = SKILLS / "rk-mtg-commander-deck-builder" / "specialists.md"
+    if specialists.is_file():
+        text = specialists.read_text(encoding="utf-8")
+        plain = " ".join(text.lower().split())
+        for role in (
+            "Deck Systems Architect",
+            "Mana & Statistics Analyst",
+            "Meta & Resilience Analyst",
+            "Card Discovery Specialist",
+            "Replacement Auditor / Red Team",
+            "Budget Analyst",
+        ):
+            if f"## {role}" not in text:
+                fail(errors, f"specialists.md missing role: {role}")
+        for rule in (
+            "specialists do not vote",
+            "do not own the deck thesis",
+            "edit the canonical file",
+        ):
+            if rule not in plain:
+                fail(errors, f"specialists.md missing coordinator rule: {rule}")
+
+    evals = SKILLS / "rk-mtg-commander-deck-builder" / "evals.md"
+    if evals.is_file():
+        text = evals.read_text(encoding="utf-8")
+        plain = " ".join(text.split())
+        ids = re.findall(r"^## Eval (\d{2}) —", text, re.M)
+        expected = [f"{number:02d}" for number in range(1, 11)]
+        if ids != expected:
+            fail(errors, f"evals.md must contain ordered evals 01-10, got {ids}")
+        if text.count("**Expected:**") != 10 or text.count("**Must not:**") != 10:
+            fail(errors, "each eval must define Expected and Must not behavior")
+        for marker in (
+            "card names replaced by equivalent",
+            "without voting or score averaging",
+            "player identity",
+            "permanent mana lost",
+            "justified local-meta",
+            "transformed-land resilience",
+            "native and commander-assisted curves",
+            "generators, consumers, converters, and recovery",
+            "never proposes cutting card A",
+            "singleton legality failure",
+            "reruns color-source",
+            "good card, no slot needed",
+            "flags a thesis conflict",
+        ):
+            if marker not in plain:
+                fail(errors, f"evals.md missing regression assertion: {marker}")
 
     playbook = SKILLS / "rk-mtg-commander-deck-playbook" / "SKILL.md"
     if playbook.is_file():

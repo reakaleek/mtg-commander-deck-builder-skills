@@ -11,6 +11,8 @@ Design rules, category questions, and the published bracket table live in [funda
 
 Diagnose the deck as a system before recommending any change. Audits and report structure live in [review-framework.md](review-framework.md). Apply them fully before a final build or a full review, and scale them down for a narrower ask. Do not start from a card and look for a cut.
 
+For complex reviews, the main agent remains the coordinator and may delegate bounded analysis using [specialists.md](specialists.md). Specialists analyze one shared deck; they never own the thesis, independently build a list, vote on the result, or edit the canonical file. The coordinator synthesizes their evidence and owns every final recommendation. Do not delegate a narrow question when one direct pass is enough.
+
 ## Preflight
 
 This skill needs `rk-mtg-scryfall`, `rk-mtg-edhrec`, `rk-mtg-archidekt`, `rk-mtg-goldfish`, and `rk-mtg-spellbook`. The Skills CLI does not install dependencies for you.
@@ -31,6 +33,17 @@ Keep a short ledger:
 
 - Hard: legality, table rules (Game Changer cap, combo/tutor/MLD/extra-turn/stax restrictions), exclusions, budget
 - Preference: theme, pets, play style, intended win pattern, pod or meta information
+
+Keep pod evidence beside it:
+
+- Observed: recurring threats, removal patterns, game pace, commander pressure,
+  and losses the user has actually reported
+- Assumed or unknown: common format pressures not yet observed in this pod
+
+Record the source and recency of material pod claims. User observations may
+justify meta exceptions; assumptions may suggest a test, but not silently
+override the deck thesis or player preference. Update this ledger after new
+game reports.
 
 Never silently violate a hard constraint. If two hard constraints conflict, pause and ask which one wins.
 
@@ -73,6 +86,41 @@ One Archidekt-safe text file is the accepted deck.
 - Generate the final Archidekt import block by reading that file, not from chat memory.
 - After each successful write, report the path and what changed.
 - The file stores the card list only. Keep budget assumptions, constraints, and analysis in the report unless they ask to persist those separately.
+
+### Live source of truth and change ledger
+
+Before each new audit, freeze one exact snapshot for every specialist. For an
+Archidekt URL, always refetch it; for a canonical local file, reread it. Parse,
+resolve, and record the live deck count before analysis. Validate
+legality and detect singleton duplicates by Oracle identity, including
+different printings of the same nonbasic card, before strategic cuts.
+
+Compare the new snapshot with the prior one and report cards added, removed,
+or quantity-changed. Never recommend cutting a card absent from the live
+snapshot. The live snapshot is authoritative; the ledger records decisions,
+not deck contents:
+
+```text
+ACCEPTED
+- [cut] -> [add]
+
+PROPOSED
+- [cut] -> [add]
+
+REJECTED
+- [cut] -> [add]
+
+TEST
+- [card]: hypothesis; success signal; failure signal
+
+CURRENT LIVE COUNT
+[parsed count]
+```
+
+Move entries when the user decides. An accepted entry permits the canonical
+write; proposed, rejected, and test entries do not. After any live refresh,
+reconcile the ledger with the snapshot and flag external edits instead of
+silently treating them as accepted recommendations.
 
 ## Archidekt input and output
 
@@ -167,15 +215,15 @@ Synergies, a coherent upgrade strategy, then explicit swaps under the user's bud
 Diagnose before you propose. Run the audits in [review-framework.md](review-framework.md), scaled to what the user asked. A narrow ask can stop after structure, reliability, mana, and coverage; a broad ask runs the full sequence, including the weakest-slot ranking, before any swap is drafted.
 
 1. Accept a pasted list, a local file, or an Archidekt deck URL. Fetch a URL with `rk-mtg-archidekt` `fetch`. Ask for owned cards if they have not said. If the URL cannot be fetched, ask for a pasted export.
-2. Fetch every card with Scryfall. Run `deck-stats` and `validate-deck`. Need Oracle text including every face.
-3. Pull EDHREC commander lists. Note high-synergy misses with sample size. Do not label low-inclusion cards as dead.
-4. Ground synergy claims in Oracle text. Ground combo lines in `rk-mtg-spellbook` `combos`.
-5. Rank the current weakest cards before searching for any addition.
-6. Write an upgrade strategy first, one short paragraph, then swaps that execute it. Close a demonstrated functional gap before chasing power. Tighten a package the commander already wants. Replace off-plan cards with on-plan ones. Do mana-base or curve work when the strategy is fine but the deck is clumsy. If budget remains under the cap, spend it on the highest-leverage on-plan upgrade, not a random staple.
-7. Propose upgrades as one-for-one swaps, or a small bundle when one expensive cut funds one critical addition. Before each addition, state the failure or plan it addresses, which existing cards already do that job, why this copy is better than no change, and any dependency. If three or more cards already do the job, skip the addition or replace the weakest copy.
-8. Budget only if the user set a cap and currency. Use `rk-mtg-scryfall` `prices`. When the basis is additional spend, price the buy list. Report coverage. Stay at or under their cap after every accepted swap.
-9. If a critical addition exceeds budget, find a cheaper card that does the same job as an expensive non-core piece, cut that, then add the critical card.
-10. If nothing can be downgraded without breaking the plan, say so and offer a cheaper functional stand-in.
+2. Establish the live source of truth above. Fetch every card with Scryfall, including every face. Run `deck-stats` and `validate-deck`; resolve legality, exact identity, count, and duplicates before strategy.
+3. Establish or validate one Deck Thesis and constraint/pod ledger. Freeze the snapshot and select only the specialists justified by the escalation rules in `specialists.md`.
+4. For an ordinary deep review, run Systems Architect and Mana & Statistics analysis on the same snapshot. Add Meta & Resilience for a major rebuild or demonstrated matchup problem. The coordinator reconciles any thesis conflict.
+5. Identify one to three primary structural problems. Rank the current weakest cards before searching for any addition.
+6. Pull EDHREC commander lists and use bounded Card Discovery only for those problems. Note sample size. EDHREC generates hypotheses; Oracle text and the actual 99 accept or reject them.
+7. Ground synergy claims in Oracle text and combo lines in `rk-mtg-spellbook` `combos`. Build a shortlist, not competing decklists.
+8. Apply the Replacement Stress Test in `review-framework.md` to each important cut-to-add pair. State the strongest case for keeping the current card. No change, sidegrade, meta choice, or test are valid outcomes.
+9. If budget is relevant, price surviving candidates with `rk-mtg-scryfall` and apply Budget Analyst criteria. Any budget-driven substitute is a new pair and must pass the Replacement Stress Test. Stay under the cap after every accepted swap without breaking source reliability, curve, or pod coverage.
+10. Write one coordinator-owned upgrade strategy, then a small ranked test batch. Expose specialist disagreement and explain the decision; never average scores or count votes.
 
 Do not recommend a swap that breaks a hard constraint. Rejected swaps leave the canonical file unchanged.
 
