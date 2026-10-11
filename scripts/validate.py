@@ -190,10 +190,10 @@ def main() -> int:
         text = evals.read_text(encoding="utf-8")
         plain = " ".join(text.split())
         ids = re.findall(r"^## Eval (\d{2}) —", text, re.M)
-        expected = [f"{number:02d}" for number in range(1, 18)]
+        expected = [f"{number:02d}" for number in range(1, max(len(ids), 22) + 1)]
         if ids != expected:
-            fail(errors, f"evals.md must contain ordered evals 01-17, got {ids}")
-        if text.count("**Expected:**") != 17 or text.count("**Must not:**") != 17:
+            fail(errors, f"evals.md must contain ordered evals 01-{expected[-1]}, got {ids}")
+        if text.count("**Expected:**") != len(ids) or text.count("**Must not:**") != len(ids):
             fail(errors, "each eval must define Expected and Must not behavior")
         for marker in (
             "card names replaced by equivalent",
@@ -216,6 +216,11 @@ def main() -> int:
             "minus duplicate = 101",
             "mana quality, utility, and colored-source opportunity cost",
             "reverses the initial recommendation",
+            "Classify the group as non-stacking",
+            "Run `themes`, pull the matching theme page",
+            "Flag the opposing payoff directions",
+            "playability counts lands only",
+            "Compare versions on shared shuffles",
         ):
             if marker not in plain:
                 fail(errors, f"evals.md missing regression assertion: {marker}")

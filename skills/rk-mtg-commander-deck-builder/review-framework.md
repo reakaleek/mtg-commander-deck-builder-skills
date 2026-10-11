@@ -94,12 +94,21 @@ that replace value now. Compare setup density with payoff and finisher density.
 When several permanents all need another spell and another turn to matter,
 flag setup-engine saturation even when every card is on theme.
 
+Count enablers against payoffs and enhancers. Flag a deck whose payoffs
+outnumber or crowd out the enablers they wait for, and payoffs that pull the
+same resource in opposite directions (fundamentals design rules 16 and 17).
+A list can look focused by keyword while its payoffs work against each other.
+
 ## Redundancy audit
 
 Group cards by the job they do, not their card type. Apply the addition-
 justification rule in `SKILL.md` and the same-job rule in `fundamentals.md`.
 When three or more cards already do the same job, compare their floors and
 name the weakest copy before adding another version.
+
+Mark each group as stacking or non-stacking. Hold non-stacking groups to the
+lower redundancy range in `fundamentals.md` and report the chance of drawing
+two; a group at about seven copies is a cut source, not a slot to fill.
 
 ## Win-condition audit
 
@@ -110,6 +119,10 @@ from parity or from behind, whether it survives a board wipe, whether one
 removal spell answers it, and the expected turn range for the stated
 bracket. Distinguish an engine, a payoff, a finisher, and the actual win
 condition. Ground catalogued combos with `rk-mtg-spellbook` `combos`.
+
+State the primary path as numbered steps and apply the step-count rule in
+`fundamentals.md`. Report whether steps one and two keep the deck in the game
+when the last step never resolves.
 
 ## Answer matrix
 
@@ -135,6 +148,20 @@ expected pace is a curve problem no single swap fixes. Playability is the
 per-spell chance of casting on curve from lands alone, so its hardest-to-cast
 list separates cards that are too expensive from cards whose colors the mana
 base does not support. Those two failures need different fixes.
+
+Playability counts lands only. It cannot see self-discounting cards, alternate
+costs, cost reducers, or mana creatures, so it overstates how hard those cards
+are to cast. Never cite the hardest-to-cast list as a cut reason for such a
+card without classifying its functional cost first, and when the player
+reports casting it cheaply in real games, that evidence outranks the estimate.
+
+Use `color_requirements` from `deck-stats` for colored sources instead of
+judging pip ratios. Report needed versus have per color, the binding spell,
+and the commander's own row. A shortfall has three different fixes: more
+sources of that color, fewer early multi-pip spells in it, or counting
+reliable early mana creatures and rocks, which the check leaves out. Say which
+fix applies, and do not call a color short when its only short cards are
+reactive spells or late top-end.
 
 Feed the tipping point to `rk-mtg-goldfish` `stats` as `--mana-target` and read
 the sweet spot alongside the opening-hand and per-turn land odds. Quote the
@@ -180,6 +207,17 @@ deck is topdecking, the graveyard is exiled when the plan depends on it, a
 key permanent is exiled, or a land drop is missed. For each, note whether
 the deck still operates, which cards go dead, what recovery tools exist,
 and whether that outcome is acceptable for the target bracket.
+
+When the player doubts a close swap between engine cards, compare the
+versions instead of arguing card quality. `rk-mtg-goldfish` tracks zones but
+not card effects, so write a scratch model labelled as a model: the same
+shuffles for every version, at least the no-interaction, commander-removed,
+and mid-game-wipe scenarios, and outcome measures such as kill rate by a
+stated turn and median progress rather than means that a few explosive games
+can inflate. Also test the next-weakest slot as the cut, not only the card
+first proposed. State what the model omits (combat, opposing interaction,
+held cards, loops) and how that biases each card. Differences of a few points
+support a test or meta-choice verdict, not a strict upgrade.
 
 ## Role compression
 
@@ -337,6 +375,12 @@ When the user shares pod or meta information, separate theoretical deck
 quality from pod fit. A strong list can still be a poor fit if it
 duplicates another regular pod deck, ignores a stated meta threat, or
 produces a gameplay experience the table already said it dislikes.
+
+Do not tune past the pod's documented pace or tolerance for interaction. A
+deck that outgrows its table stops getting played, and lowering its power
+afterward rarely satisfies anyone, so stop upgrades before that point rather
+than planning to weaken the list later. Some commanders cannot be tuned down
+at all; say so instead of proposing cuts that leave the same play pattern.
 
 ## Commander recommendation mode
 

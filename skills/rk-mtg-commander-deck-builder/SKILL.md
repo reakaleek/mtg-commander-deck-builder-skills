@@ -210,7 +210,7 @@ Keep the judgment work: roles, reliability, dependency, weakest slots, and upgra
 
 ## Build mode
 
-Interview until constraints are clear, resolve the commander, then pull EDHREC. If they named a sub-theme, use `rk-mtg-edhrec` `commander NAME --theme SLUG` (or `--budget`). Otherwise use commander lists plus average-deck.
+Interview until constraints are clear, resolve the commander, then pull EDHREC. Run `rk-mtg-edhrec` `themes NAME` first. The unfiltered commander page and average-deck blend every archetype people build, so for an open-ended commander they staple half-plans together. Pick the theme slug or slugs that match the thesis (ask if the player has not chosen), use `commander NAME --theme SLUG` (or `--budget`), and name the themes you left out. Use the unfiltered lists only when the commander supports essentially one build.
 
 Draft a candidate pool by package (lands, ramp, draw, interaction, wins, plan), typically over legal size. Cut to size with the weakest-slot ranking in [review-framework.md](review-framework.md). Run the **Build mode reuse** checklist there before declaring the list final. Then run numeric work and `rk-mtg-scryfall` prices if a budget is set.
 
@@ -231,7 +231,7 @@ Diagnose before you propose. Run the audits in [review-framework.md](review-fram
 3. Establish or validate one Deck Thesis and constraint/pod ledger. Freeze the snapshot and select only the specialists justified by the escalation rules in `specialists.md`.
 4. For an ordinary deep review, run Systems Architect and Mana & Statistics analysis on the same snapshot. Add Meta & Resilience for a major rebuild or demonstrated matchup problem. The coordinator reconciles any thesis conflict.
 5. Identify one to three primary structural problems. Rank the current weakest cards before searching for any addition.
-6. Pull EDHREC commander lists and use bounded Card Discovery only for those problems. Note sample size. EDHREC generates hypotheses; Oracle text and the actual 99 accept or reject them.
+6. Pull EDHREC commander lists and use bounded Card Discovery only for those problems. Prefer the theme pages that match the thesis over the blended commander page, and say which themes and which popular cards you left out and why. Note sample size. EDHREC generates hypotheses; Oracle text and the actual 99 accept or reject them.
 7. Ground synergy claims in Oracle text and combo lines in `rk-mtg-spellbook` `combos`. Build a shortlist, not competing decklists.
 8. Apply the complete Replacement Stress Test in `review-framework.md` to every cut-to-add pair before recommending it. State the strongest case for keeping the current card. No change, sidegrade, meta choice, or test are valid outcomes.
 9. Evaluate surviving swaps sequentially, then run the Replacement Batch Audit against the combined list. An individually valid pair may fail after another cut weakens the same package.

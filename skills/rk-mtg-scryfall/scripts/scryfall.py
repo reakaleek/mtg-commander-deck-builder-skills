@@ -41,6 +41,7 @@ MARKET_CMC_FLOOR = 1.75
 MARKET_CMC_CEILING = 6.0
 MARKET_EFFICIENCY_LIMITS = (0.65, 1.1)
 TIPPING_POINT_SHARE = 0.65
+SOURCE_TARGET = 0.90
 OPENING_HAND = 7
 MANA_SYMBOL_RE = re.compile(r"\{([^}]+)\}")
 ANY_NUMBER_RE = re.compile(r"a deck can have any number of cards named", re.I)
@@ -434,6 +435,15 @@ def pip_counts(mana_cost: str | None) -> dict[str, float]:
         share = 1.0 / len(colors)
         for color in colors:
             counts[color] += share
+    return counts
+
+
+def strict_pips(mana_cost: str | None) -> dict[str, int]:
+    """Single-colour pips only; hybrid and Phyrexian symbols have another way to pay."""
+    counts = {c: 0 for c in "WUBRG"}
+    for sym in MANA_SYMBOL_RE.findall(mana_cost or ""):
+        if sym in counts:
+            counts[sym] += 1
     return counts
 
 
@@ -995,7 +1005,17 @@ def cmd_deck_stats(args: argparse.Namespace) -> int:
         row_pips = pip_counts(mana_cost_of(card))
         for color, value in row_pips.items():
             pips[color] += value * qty
-        spells.append({"name": row["name"], "qty": qty, "mv": mv, "pips": row_pips, "card": card})
+        spells.append(
+            {
+                "name": row["name"],
+                "qty": qty,
+                "mv": mv,
+                "pips": row_pips,
+                "strict_pips": strict_pips(mana_cost_of(card)),
+                "commander": row.get("zone") == "command",
+                "card": card,
+            }
+        )
 
     library = sum(int(c["qty"]) for c in in_deck) - sum(
         int(c["qty"]) for c in in_deck if c.get("zone") == "command"
@@ -1019,6 +1039,9 @@ def cmd_deck_stats(args: argparse.Namespace) -> int:
             "land": sources_land,
             "nonland": sources_nonland,
         },
+        "color_requirements": color_requirements(
+            spells, library, lands, sources_land, sources_nonland
+        ),
         "tapped_lands_heuristic": {
             "count": len(tapped_lands),
             "names": tapped_lands,
@@ -1082,6 +1105,103 @@ def playability(
         "average_on_curve_pct": round(average, 1),
         "hardest_to_cast": scored[:10],
         "note": "lands only, on the play, colour and land counts treated as independent",
+    }
+
+
+def sources_on_curve(library: int, lands: int, sources: int, turn: int, pips: int) -> float:
+    """P(at least `pips` sources of a colour by `turn`, given at least `turn` lands), on the play."""
+    seen = min(OPENING_HAND + turn - 1, library)
+    others = lands - sources
+    spells = library - lands
+    total = math.comb(library, seen)
+    hit_lands = hit_both = 0
+    for c in range(0, min(sources, seen) + 1):
+        for o in range(0, min(others, seen - c) + 1):
+            if c + o < turn:
+                continue
+            ways = math.comb(sources, c) * math.comb(others, o) * math.comb(spells, seen - c - o)
+            hit_lands += ways
+            if c >= pips:
+                hit_both += ways
+    if not total or not hit_lands:
+        return 0.0
+    return hit_both / hit_lands
+
+
+def sources_needed(library: int, lands: int, turn: int, pips: int) -> int | None:
+    for sources in range(pips, lands + 1):
+        if sources_on_curve(library, lands, sources, turn, pips) >= SOURCE_TARGET:
+            return sources
+    return None
+
+
+def color_requirements(
+    spells: list[dict[str, Any]],
+    library: int,
+    lands: int,
+    land_sources: dict[str, int],
+    nonland_sources: dict[str, int],
+) -> dict[str, Any]:
+    """Karsten-style coloured-source check: the fewest land sources that give
+    SOURCE_TARGET odds of casting each spell on curve once the land drops are hit."""
+    needed_cache: dict[tuple[int, int], int | None] = {}
+    by_color: dict[str, Any] = {}
+    for color in "WUBRG":
+        rows = []
+        for spell in spells:
+            pips = spell["strict_pips"].get(color, 0)
+            if not pips:
+                continue
+            turn = max(spell["mv"], 1)
+            key = (turn, pips)
+            if key not in needed_cache:
+                needed_cache[key] = sources_needed(library, lands, turn, pips)
+            card = spell["card"]
+            reactive = "Instant" in (card.get("type_line") or "") or "Flash" in (
+                card.get("keywords") or []
+            )
+            rows.append(
+                {
+                    "name": spell["name"],
+                    "turn": turn,
+                    "pips": pips,
+                    "needed": needed_cache[key],
+                    "reactive": reactive,
+                    "commander": spell.get("commander", False),
+                }
+            )
+        if not rows:
+            continue
+        have = land_sources.get(color, 0)
+        rows.sort(key=lambda r: (r["needed"] is None, -(r["needed"] or 0)))
+        proactive = [r for r in rows if not r["reactive"]] or rows
+        binding = proactive[0]
+        needed = binding["needed"]
+        short = [r for r in rows if r["needed"] is None or r["needed"] > have]
+        by_color[color] = {
+            "land_sources": have,
+            "needed_land_sources": needed,
+            "status": "ok" if needed is not None and have >= needed else "short",
+            "binding": binding,
+            "needed_including_reactive": rows[0]["needed"],
+            "commander_rows": [r for r in rows if r["commander"]],
+            "short_cards": short[:8],
+            "short_count": len(short),
+            "nonland_producers_not_counted": nonland_sources.get(color, 0),
+        }
+    return {
+        "by_color": by_color,
+        "target": SOURCE_TARGET,
+        "note": (
+            "Karsten-style: fewest land sources for a "
+            f"{SOURCE_TARGET:.0%} chance to have the coloured pips on curve, on the play, "
+            "given every land drop is hit; no mulligans, so slightly stricter than Karsten's "
+            "published tables, most at turn 1; needed_land_sources uses proactive spells, "
+            "while instants and flash cards rarely need casting on curve and are reported "
+            "via needed_including_reactive; hybrid and Phyrexian pips ignored; "
+            "mana creatures and rocks are listed but not counted; cost reducers, alternate "
+            "costs, and commander assistance are not modelled"
+        ),
     }
 
 
