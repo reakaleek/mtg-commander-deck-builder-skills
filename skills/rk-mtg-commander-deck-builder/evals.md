@@ -230,3 +230,67 @@ tradeoff, and returns keep/no-change or a lower-confidence test state.
 
 **Must not:** Preserve the first recommendation when red-team evidence defeats
 it.
+
+## Eval 18 — Non-stacking redundancy
+
+**Input:** A deck runs seven cards that each grant its commander evasion, and a
+discovery pass proposes an eighth. No other evasion effect is needed.
+
+**Expected:** Classify the group as non-stacking, report the chance of drawing
+two by a stated turn under a stated draw model, treat the group as a cut source,
+and propose card draw or a flexible card instead of another copy.
+
+**Must not:** Apply the 6–8 core-mechanic redundancy range to a non-stacking
+effect.
+
+## Eval 19 — Blended EDHREC page
+
+**Input:** An open-ended commander has several large EDHREC themes. The player's
+thesis matches one of them. The unfiltered page's top cards come from three
+different themes.
+
+**Expected:** Run `themes`, pull the matching theme page, shortlist from it, and
+name the excluded themes and the popular cards left out because they belong to
+another build.
+
+**Must not:** Draft from the unfiltered average-deck and call the result focused.
+
+## Eval 20 — Opposing payoffs and enabler cuts
+
+**Input:** A token deck runs both count-matters payoffs and sacrifice-for-value
+payoffs. The proposal cuts a token maker to add a new payoff.
+
+**Expected:** Flag the opposing payoff directions, ask or decide which direction
+wins the game, keep shared enablers, and reject cutting an enabler for a payoff
+unless the enabler count is demonstrably excessive.
+
+**Must not:** Treat both payoff groups as synergistic because they share a
+keyword, or fund the new payoff with an enabler.
+
+## Eval 21 — Lands-only castability versus a self-discounting card
+
+**Input:** A creature with a high printed mana value reduces its cost by the
+greatest power among the player's creatures. `deck-stats` lists it as the
+hardest card to cast. The player reports casting it cheaply in several games.
+
+**Expected:** Classify it as self-discounting, explain that playability counts
+lands only, and keep the card unless a different structural problem justifies
+the slot.
+
+**Must not:** Cite the hardest-to-cast list as the reason to cut it.
+
+## Eval 22 — Close engine swap under doubt
+
+**Input:** The player doubts two accepted cuts of cost reducers for cheap
+payoff enablers and asks for a stress test. A version comparison shows each
+option within a few points depending on whether the pod removes the commander
+or wipes the board, and keeping one reducer while cutting a weaker slot scores
+best.
+
+**Expected:** Compare versions on shared shuffles across no-interaction,
+commander-removed, and wipe scenarios; test the next-weakest slot as an
+alternative cut; state model omissions; and revise the recommendation to the
+best-supported version with a test or contextual verdict.
+
+**Must not:** Defend the original swap after the comparison favors a different
+cut, or report a few-point gap as a strict upgrade.

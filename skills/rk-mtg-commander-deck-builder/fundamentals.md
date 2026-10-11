@@ -15,7 +15,11 @@ counts only. No target column.
   strategies, and down only when the curve and reliable acceleration support it.
 - **10–12 ramp:** Favor efficient acceleration, especially two-mana options,
   while considering land ramp, mana creatures, and rocks appropriate to the
-  colors and strategy.
+  colors and strategy. Match ramp to the commander's mana value: ramp earns
+  its slot when it moves the commander or the key play a full turn earlier.
+  One-mana ramp fits a three-mana commander and two-mana ramp a four-mana
+  one; three-mana ramp in front of a four-mana commander mostly strands a
+  mana. Late, expensive ramp needs a named mana sink.
 - **8–12 card draw:** Combine repeatable engines with burst draw or selection so
   the deck can recover after interaction.
 - **8–10 single-target removal:** Prefer low-cost, instant-speed answers with
@@ -39,6 +43,13 @@ Ask whether this commander already supplies a category and when it normally
 starts supplying it. Count that supply when you judge the list, but do not
 call a late commander early ramp or draw. Distinguish cards that work alone
 from cards that need another permanent, a graveyard, or a token.
+
+When a commander or engine triggers on casting, read the property where the
+check happens: on the stack. Alternate-cost casts (evoke, warp, impending,
+X set to zero, cast-from-exile modes) are still casts and are often the
+cheapest enablers in the list, and type-changing abilities that work only on
+the battlefield do not apply to the spell. Count those cards by their
+effective cast cost, not their printed mana value.
 
 ## Brackets
 
@@ -76,7 +87,14 @@ the user says the theme needs it; confirm that in the pregame conversation.
    justified exception.
 3. Build redundancy first: aim for roughly **6–8 functional copies** of each
    core mechanic, using the commander as a source only when it is reliably
-   available.
+   available. Effects that do not stack are the exception: once one copy
+   resolves, a second adds nothing (a static permission, evasion or haste
+   for the same creature, a fog, a single alpha-strike pump). Aim for about
+   **3–5** of those. With roughly 25 cards seen by turn eight, three copies
+   give about 59% to see one and 16% to see two; five give 78% and 37%;
+   seven give 88% and 57%, so at seven a dead duplicate is likely. Card draw
+   is the opposite case: spare copies turn into other cards, so prefer draw
+   or a flexible card over another non-stacking copy.
 4. Avoid win-more cards. Prefer pieces that develop the plan, stabilize from
    behind, or rebuild after a board wipe.
 5. Check Commander legality with `rk-mtg-scryfall` `validate-deck --final --resolve`,
@@ -147,6 +165,12 @@ basics in play when the manabase needs them. Count always-tapped lands and
 other delayed mana sources. When a card checks a property of other cards,
 check that property across the whole list, not only a count of one card type.
 
+Modal double-faced lands and cheap land-cyclers count toward the land total
+and let a deck keep 36–38 land slots without losing action; cutting below
+that range needs a reason in the curve, not a wish for more spells. Count the
+basics, and the land types that search effects can actually find, against
+every effect that fetches them, so late fetch effects do not go dead.
+
 ## Win conditions
 
 How does this list actually close a game? Do those lines survive the table
@@ -216,6 +240,29 @@ These checks sit on top of the baseline. They decide whether a card belongs.
     intended archetype and power, local pod, budget, and desired play pattern.
     Before a large package, ask whether accepting every recommendation still
     leaves the deck the player wanted.
+15. **Count the steps.** Name the primary win path as ordered steps
+    (for example, deploy bodies, then pump them). Two steps is healthy. At
+    three or more, each earlier step must be useful on its own, because every
+    extra step is another turn to assemble and another removal window, and a
+    plan that only works when every step lands rarely happens.
+16. **One direction per resource.** Payoffs that want the same resource kept
+    (count-matters, anthems) and payoffs that want it spent (sacrifice,
+    discard-for-value) fight each other even when they share a keyword. Pick
+    the direction that wins the game; keep only the shared enablers in the
+    overlap. Adding a second or third sub-plan weakens every plan already in
+    the deck.
+17. **Enablers outnumber payoffs.** Enablers are the first step every payoff
+    and enhancer waits for, so they are the densest package. Do not cut an
+    enabler to fit a new payoff or enhancer unless the enabler count is
+    demonstrably excessive.
+18. **Same-role edits by default.** Replace a card with one of the same
+    primary role. Name any cross-role swap as such and recheck category counts,
+    because repeated one-card edits drift ratios unnoticed, usually lands and
+    interaction first.
+19. **Hedge by probability.** Add a narrow answer to a specific silver bullet
+    only when pod evidence shows it recurs; a hedge that is dead in most games
+    costs more than the rare loss. When a single hate piece would shut the deck
+    off, make sure the answers to that piece are not shut off by it too.
 
 ## Required build or analysis output
 
