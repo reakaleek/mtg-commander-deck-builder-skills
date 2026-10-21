@@ -14,7 +14,7 @@ python scripts/scryfall.py <command>
 python scripts/scryfall.py --help
 ```
 
-Search operators: [syntax.md](syntax.md)
+Search operators: [syntax.md](syntax.md) · Finding cards that fit a role or theme: [finding-cards.md](finding-cards.md)
 
 This skill returns Oracle text, legality, printings, and prices. Inclusion and commander-specific synergy live elsewhere. Do not call other deckbuilding skills from here.
 
@@ -23,6 +23,8 @@ This skill returns Oracle text, legality, printings, and prices. Inclusion and c
 - One known name: `named`
 - Two or more known names: `collection`
 - Discover or filter unknown cards: `search` with `unique:cards`
+- Candidates for a deck role or theme: follow [finding-cards.md](finding-cards.md)
+- Tagger tag names for `otag:` / `art:`: `tags`
 - Value a list in a requested currency: `prices`
 - Parse or check an Archidekt export: `parse-deck` / `validate-deck`
 - Curve, pips, colored sources, tipping point, playability, Game Changers: `deck-stats`
@@ -34,6 +36,8 @@ Never call `/cards/named` once per decklist line. Never paginate a search just t
 
 ```bash
 python scripts/scryfall.py search 'QUERY'
+python scripts/scryfall.py tags draw
+python scripts/scryfall.py tags '/^removal-/' --kind oracle
 python scripts/scryfall.py named 'CARD NAME'
 python scripts/scryfall.py named 'fuzzy fragment' --fuzzy
 python scripts/scryfall.py collection decklist.txt --fuzzy-missing
@@ -49,7 +53,9 @@ python scripts/scryfall.py bulk oracle_cards
 
 `parse-deck` and `collection` accept a file path or `-` for stdin. `prices` uses `--currency usd|eur|tix`. `write-deck` reads stdin unless you pass `--file-in`. `--force` overwrites a non-deck file.
 
-`search` defaults to `--max 40` and slim `--fields`. Raise `--max` only if you need more. Use `--unique prints` only when printings, prices, or art matter.
+`search` defaults to `--max 40` and slim `--fields`. Raise `--max` only if you need more. Use `--unique prints` only when printings, prices, or art matter. No matches returns `total_cards: 0`, not an error.
+
+Every search reports `unknown_tags`: tag terms Scryfall does not recognize. A misspelled tag matches nothing on its own and silently changes results inside `or` or `-`, so fix any listed tag before trusting the output. `tags PATTERN` greps the Tagger tag list (substring, or `/regex/`; `--kind art` for illustration tags). The list comes from Scryfall's tag docs page and is cached for a week under `~/.cache/scryfall/`. Aliases that the page does not list are confirmed with one search and remembered.
 
 `--fuzzy` needs a recognizable fragment. A wild typo 404s or can match the wrong card. Check the returned `name`.
 

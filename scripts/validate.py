@@ -12,7 +12,7 @@ SKILLS = ROOT / "skills"
 
 REQUIRED = {
     "rk-mtg-commander-deck-playbook": ("SKILL.md", "playbook.md"),
-    "rk-mtg-scryfall": ("SKILL.md", "syntax.md", "scripts/scryfall.py"),
+    "rk-mtg-scryfall": ("SKILL.md", "syntax.md", "finding-cards.md", "scripts/scryfall.py"),
     "rk-mtg-edhrec": ("SKILL.md", "scripts/edhrec.py"),
     "rk-mtg-archidekt": ("SKILL.md", "scripts/archidekt.py"),
     "rk-mtg-goldfish": ("SKILL.md", "scripts/goldfish.py"),

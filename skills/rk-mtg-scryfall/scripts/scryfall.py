@@ -23,6 +23,14 @@ MIN_INTERVAL_SEC = 0.55
 SLOW_ENDPOINTS = ("/cards/search", "/cards/named", "/cards/random", "/cards/collection")
 DEFAULT_CACHE = Path.home() / ".cache" / "scryfall"
 PRICE_TTL_SEC = 24 * 60 * 60
+TAGGER_TAGS_URL = "https://scryfall.com/docs/tagger-tags"
+TAGS_TTL_SEC = 7 * 24 * 60 * 60
+TAG_LINK_RE = {
+    "oracle": re.compile(r'href="/search\?q=(?:otag|function|oracletag)%3A([^"&]+)'),
+    "art": re.compile(r'href="/search\?q=(?:art|atag|arttag)%3A([^"&]+)'),
+}
+TAG_TERM_RE = re.compile(r"(?<![\w-])-?(otag|oracletag|function|atag|arttag|art):([a-z0-9-]+)", re.I)
+DEFAULT_TAGS_MAX = 60
 DEFAULT_FIELDS = (
     "name,mana_cost,cmc,type_line,oracle_text,color_identity,"
     "produced_mana,keywords,game_changer,commander_legal,edhrec_rank,price_usd"
@@ -523,6 +531,106 @@ def resolve_fuzzy(name: str) -> dict[str, Any] | None:
         return None
 
 
+def fetch_text(url: str) -> str:
+    req = urllib.request.Request(
+        url, headers={"User-Agent": USER_AGENT, "Accept": "text/html"}, method="GET"
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=120) as resp:
+            return resp.read().decode("utf-8", errors="replace")
+    except (urllib.error.HTTPError, urllib.error.URLError) as e:
+        raise RuntimeError(f"Scryfall tag list request failed: {e}") from e
+
+
+def load_tag_index(cache_dir: Path, fresh: bool = False) -> dict[str, Any]:
+    """Tagger tag names scraped from Scryfall's tag docs page, cached for a week."""
+    path = cache_dir / "tagger-tags.json"
+    if not fresh and path.is_file():
+        try:
+            cached = json.loads(path.read_text(encoding="utf-8"))
+            if time.time() - cached.get("fetched_at", 0) < TAGS_TTL_SEC:
+                cached["cached"] = True
+                return cached
+        except (OSError, json.JSONDecodeError):
+            pass
+    page = fetch_text(TAGGER_TAGS_URL)
+    index: dict[str, Any] = {"fetched_at": time.time(), "source": TAGGER_TAGS_URL}
+    for kind, pattern in TAG_LINK_RE.items():
+        names = {urllib.parse.unquote_plus(m).lower() for m in pattern.findall(page)}
+        index[kind] = sorted(names)
+    if not index["oracle"]:
+        raise RuntimeError("Scryfall tag docs page returned no oracle tags; the page layout may have changed")
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(index), encoding="utf-8")
+    index["cached"] = False
+    return index
+
+
+def tag_has_cards(keyword: str, name: str) -> bool:
+    url = f"{API}/cards/search?{urllib.parse.urlencode({'q': f'{keyword}:{name}'})}"
+    try:
+        return bool(http_json("GET", url).get("total_cards"))
+    except RuntimeError as e:
+        if str(e).startswith("Scryfall HTTP 404"):
+            return False
+        raise
+
+
+def unknown_tags(query: str, cache_dir: Path) -> list[str]:
+    """Tag terms Scryfall does not recognize. Unlisted names that still match cards are aliases."""
+    terms = TAG_TERM_RE.findall(query)
+    if not terms:
+        return []
+    index = load_tag_index(cache_dir)
+    aliases = index.setdefault("aliases", {"oracle": [], "art": []})
+    missing = []
+    learned = False
+    for key, name in terms:
+        kind = "art" if key.lower() in ("atag", "arttag", "art") else "oracle"
+        name = name.lower()
+        if name in index[kind] or name in aliases[kind]:
+            continue
+        if tag_has_cards(key, name):
+            aliases[kind].append(name)
+            learned = True
+        else:
+            missing.append(f"{key}:{name}")
+    if learned:
+        stored = {k: v for k, v in index.items() if k != "cached"}
+        (cache_dir / "tagger-tags.json").write_text(json.dumps(stored), encoding="utf-8")
+    return missing
+
+
+def cmd_tags(args: argparse.Namespace) -> int:
+    index = load_tag_index(Path(args.cache_dir).expanduser(), fresh=args.fresh)
+    names = index[args.kind]
+    pattern = args.pattern
+    if pattern and len(pattern) > 1 and pattern.startswith("/") and pattern.endswith("/"):
+        regex = re.compile(pattern[1:-1], re.I)
+        matches = [n for n in names if regex.search(n)]
+    elif pattern:
+        matches = [n for n in names if pattern.lower() in n]
+    else:
+        matches = names
+    json.dump(
+        {
+            "kind": args.kind,
+            "pattern": pattern,
+            "total_matches": len(matches),
+            "returned": min(len(matches), args.max),
+            "tags": matches[: args.max],
+            "keyword": "otag:" if args.kind == "oracle" else "art:",
+            "source": index["source"],
+            "cached": index["cached"],
+        },
+        sys.stdout,
+        indent=2,
+        ensure_ascii=False,
+    )
+    sys.stdout.write("\n")
+    return 0
+
+
 def cmd_search(args: argparse.Namespace) -> int:
     params = {"q": args.query, "unique": args.unique}
     if args.order:
@@ -531,9 +639,20 @@ def cmd_search(args: argparse.Namespace) -> int:
     fields = parse_fields(args.fields)
     cards: list[dict[str, Any]] = []
     total: int | None = None
+    try:
+        bad_tags = unknown_tags(args.query, Path(args.cache_dir).expanduser())
+    except RuntimeError as e:
+        bad_tags = []
+        print(f"warning: could not check tag names: {e}", file=sys.stderr)
 
     while url and len(cards) < args.max:
-        result = http_json("GET", url)
+        try:
+            result = http_json("GET", url)
+        except RuntimeError as e:
+            if not cards and str(e).startswith("Scryfall HTTP 404"):
+                total = 0
+                break
+            raise
         total = result.get("total_cards", total)
         batch = result.get("data") or []
         for card in batch:
@@ -548,6 +667,7 @@ def cmd_search(args: argparse.Namespace) -> int:
             "unique": args.unique,
             "total_cards": total,
             "returned": len(cards),
+            "unknown_tags": bad_tags,
             "cards": cards,
         },
         sys.stdout,
@@ -1366,7 +1486,16 @@ def build_parser() -> argparse.ArgumentParser:
     search.add_argument("--order", default=None)
     search.add_argument("--max", type=int, default=DEFAULT_SEARCH_MAX, dest="max")
     search.add_argument("--fields", default=DEFAULT_FIELDS)
+    search.add_argument("--cache-dir", default=str(DEFAULT_CACHE))
     search.set_defaults(func=cmd_search)
+
+    tags = sub.add_parser("tags", help="List or grep Tagger tag names (otag:/art:)")
+    tags.add_argument("pattern", nargs="?", default=None, help="Substring, or /regex/")
+    tags.add_argument("--kind", choices=("oracle", "art"), default="oracle")
+    tags.add_argument("--max", type=int, default=DEFAULT_TAGS_MAX, dest="max")
+    tags.add_argument("--fresh", action="store_true")
+    tags.add_argument("--cache-dir", default=str(DEFAULT_CACHE))
+    tags.set_defaults(func=cmd_tags)
 
     named = sub.add_parser("named", help="GET /cards/named")
     named.add_argument("name")
