@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Check skill frontmatter, repo hygiene, and builder/playbook constraints."""
+"""Check skill frontmatter, repo hygiene, and deckbuilder/playbook constraints."""
 
 from __future__ import annotations
 
@@ -11,13 +11,6 @@ ROOT = Path(__file__).resolve().parents[1]
 SKILLS = ROOT / "skills"
 
 REQUIRED = {
-    "rk-mtg-commander-deck-builder": (
-        "SKILL.md",
-        "fundamentals.md",
-        "review-framework.md",
-        "specialists.md",
-        "evals.md",
-    ),
     "rk-mtg-commander-deck-playbook": ("SKILL.md", "playbook.md"),
     "rk-mtg-scryfall": ("SKILL.md", "syntax.md", "scripts/scryfall.py"),
     "rk-mtg-edhrec": ("SKILL.md", "scripts/edhrec.py"),
@@ -29,8 +22,7 @@ REQUIRED = {
 
 DECKBUILDER_MAX_SKILL_LINES = 150
 
-BUILDER_DOCS = [
-    SKILLS / "rk-mtg-commander-deck-builder" / "SKILL.md",
+PLAYBOOK_DOCS = [
     SKILLS / "rk-mtg-commander-deck-playbook" / "SKILL.md",
     SKILLS / "rk-mtg-commander-deck-playbook" / "playbook.md",
 ]
@@ -146,88 +138,6 @@ def main() -> int:
             if banned in text:
                 fail(errors, f"{rel} contains {banned}")
 
-    builder = SKILLS / "rk-mtg-commander-deck-builder" / "SKILL.md"
-    if builder.is_file():
-        text = builder.read_text(encoding="utf-8")
-        if "rk-mtg-scryfall" not in text or "rk-mtg-edhrec" not in text:
-            fail(errors, "builder SKILL.md must name both rk-mtg-scryfall and rk-mtg-edhrec")
-        if "rk-mtg-goldfish" not in text or "rk-mtg-spellbook" not in text:
-            fail(errors, "builder SKILL.md must name rk-mtg-goldfish and rk-mtg-spellbook")
-        if "stop" not in text.lower():
-            fail(errors, "builder SKILL.md must stop when helpers are missing")
-        if "Archidekt import" not in text:
-            fail(errors, "builder SKILL.md must require an Archidekt import block")
-        if "buy list" not in text.lower():
-            fail(errors, "builder SKILL.md must require a purchase-only Archidekt buy list")
-        if "canonical" not in text.lower():
-            fail(errors, "builder SKILL.md must document the canonical deck file")
-        if "[specialists.md](specialists.md)" not in text:
-            fail(errors, "builder SKILL.md must link the specialist architecture")
-        if "Replacement Stress Test" not in text:
-            fail(errors, "builder SKILL.md must require replacement stress testing")
-
-    specialists = SKILLS / "rk-mtg-commander-deck-builder" / "specialists.md"
-    if specialists.is_file():
-        text = specialists.read_text(encoding="utf-8")
-        plain = " ".join(text.lower().split())
-        for role in (
-            "Deck Systems Architect",
-            "Mana & Statistics Analyst",
-            "Meta & Resilience Analyst",
-            "Card Discovery Specialist",
-            "Replacement Auditor / Red Team",
-            "Budget Analyst",
-        ):
-            if f"## {role}" not in text:
-                fail(errors, f"specialists.md missing role: {role}")
-        for rule in (
-            "specialists do not vote",
-            "do not own the deck thesis",
-            "edit the canonical file",
-        ):
-            if rule not in plain:
-                fail(errors, f"specialists.md missing coordinator rule: {rule}")
-
-    evals = SKILLS / "rk-mtg-commander-deck-builder" / "evals.md"
-    if evals.is_file():
-        text = evals.read_text(encoding="utf-8")
-        plain = " ".join(text.split())
-        ids = re.findall(r"^## Eval (\d{2}) —", text, re.M)
-        expected = [f"{number:02d}" for number in range(1, max(len(ids), 22) + 1)]
-        if ids != expected:
-            fail(errors, f"evals.md must contain ordered evals 01-{expected[-1]}, got {ids}")
-        if text.count("**Expected:**") != len(ids) or text.count("**Must not:**") != len(ids):
-            fail(errors, "each eval must define Expected and Must not behavior")
-        for marker in (
-            "card names replaced by equivalent",
-            "without voting or score averaging",
-            "player identity",
-            "permanent mana lost",
-            "justified local-meta",
-            "transformed-land resilience",
-            "native and commander-assisted curves",
-            "generators, consumers, converters, and recovery",
-            "never proposes cutting card A",
-            "singleton legality failure",
-            "reruns color-source",
-            "good card, no slot needed",
-            "flags a thesis conflict",
-            "invalidates the original replacement verdict",
-            "evaluates the second pair against the list containing the first swap",
-            "false sink or acceptable sink",
-            "functional burden separately",
-            "minus duplicate = 101",
-            "mana quality, utility, and colored-source opportunity cost",
-            "reverses the initial recommendation",
-            "Classify the group as non-stacking",
-            "Run `themes`, pull the matching theme page",
-            "Flag the opposing payoff directions",
-            "playability counts lands only",
-            "Compare versions on shared shuffles",
-        ):
-            if marker not in plain:
-                fail(errors, f"evals.md missing regression assertion: {marker}")
-
     deckbuilder = SKILLS / "mtg-deckbuilder"
     if deckbuilder.is_dir():
         extra = sorted(
@@ -265,7 +175,7 @@ def main() -> int:
         if "never write" not in text.lower() and "must never" not in text.lower() and "Never write" not in text:
             fail(errors, "playbook SKILL.md must refuse to rewrite the deck file")
 
-    for path in BUILDER_DOCS:
+    for path in PLAYBOOK_DOCS:
         if not path.is_file():
             continue
         text = path.read_text(encoding="utf-8")

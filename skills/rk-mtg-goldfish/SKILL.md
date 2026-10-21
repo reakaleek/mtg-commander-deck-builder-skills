@@ -20,7 +20,7 @@ This skill only tracks zones (library, hand, battlefield, graveyard, exile, comm
 
 Any file of `quantity + name` lines works, the same shape the other skills read and write. Optional `[Categories]` tags and set/collector suffixes are ignored for card identity. Pass `-` to read from stdin.
 
-Commander decks usually store the canonical file as plain `quantity + name` lines with no way to mark the command zone (the text block cannot keep that flag, see the `rk-mtg-commander-deck-builder` skill). Pass `--commander "Exact Name"` once per commander or background so those cards start in the command zone instead of the shuffled library.
+Commander decks usually store the canonical file as plain `quantity + name` lines with no way to mark the command zone (the text block cannot keep that flag). Pass `--commander "Exact Name"` once per commander or background so those cards start in the command zone instead of the shuffled library.
 
 ## Play one seat round by round
 

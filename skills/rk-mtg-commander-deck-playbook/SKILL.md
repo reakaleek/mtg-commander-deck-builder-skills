@@ -7,7 +7,7 @@ description: Write a piloting playbook for an existing Commander deck. Use when 
 
 Explain the submitted deck as it exists. Do not replace cards. Do not silently optimize the list.
 
-If analysis finds a deckbuilding problem, state the play limitation. Offer a handoff to `rk-mtg-commander-deck-builder` only if the user wants changes.
+If analysis finds a deckbuilding problem, state the play limitation. Offer a handoff to `mtg-deckbuilder` only if the user wants changes.
 
 The section outline lives in [playbook.md](playbook.md). That file is structure, not a sample guide. Do not put card names or preset turn or count targets in this skill.
 
@@ -27,7 +27,7 @@ Find each helper from the installed skill directory that contains its `SKILL.md`
 
 Do not replace helpers with ad-hoc HTTP.
 
-This skill may accept a deck produced by `rk-mtg-commander-deck-builder`. It does not depend on that skill and must not rewrite the builder's file.
+This skill may accept a deck produced by `mtg-deckbuilder`. It does not depend on that skill and must not rewrite that skill's deck file.
 
 ## Input
 
