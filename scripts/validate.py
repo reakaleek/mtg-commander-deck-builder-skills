@@ -24,7 +24,10 @@ REQUIRED = {
     "rk-mtg-archidekt": ("SKILL.md", "scripts/archidekt.py"),
     "rk-mtg-goldfish": ("SKILL.md", "scripts/goldfish.py"),
     "rk-mtg-spellbook": ("SKILL.md", "scripts/spellbook.py"),
+    "mtg-deckbuilder": ("SKILL.md", "principles.md"),
 }
+
+DECKBUILDER_MAX_SKILL_LINES = 150
 
 BUILDER_DOCS = [
     SKILLS / "rk-mtg-commander-deck-builder" / "SKILL.md",
@@ -224,6 +227,33 @@ def main() -> int:
         ):
             if marker not in plain:
                 fail(errors, f"evals.md missing regression assertion: {marker}")
+
+    deckbuilder = SKILLS / "mtg-deckbuilder"
+    if deckbuilder.is_dir():
+        extra = sorted(
+            p.name for p in deckbuilder.iterdir() if p.name not in {"SKILL.md", "principles.md"}
+        )
+        if extra:
+            fail(errors, f"mtg-deckbuilder allows only SKILL.md and principles.md, found {extra}")
+        skill = deckbuilder / "SKILL.md"
+        if skill.is_file():
+            text = skill.read_text(encoding="utf-8")
+            if len(text.splitlines()) > DECKBUILDER_MAX_SKILL_LINES:
+                fail(errors, f"mtg-deckbuilder/SKILL.md exceeds {DECKBUILDER_MAX_SKILL_LINES} lines")
+            for helper in (
+                "rk-mtg-archidekt",
+                "rk-mtg-scryfall",
+                "rk-mtg-edhrec",
+                "rk-mtg-spellbook",
+                "rk-mtg-goldfish",
+            ):
+                if helper not in text:
+                    fail(errors, f"mtg-deckbuilder/SKILL.md must name {helper}")
+            if "[principles.md](principles.md)" not in text:
+                fail(errors, "mtg-deckbuilder/SKILL.md must link principles.md")
+            for pattern in TARGET_PATTERNS:
+                if pattern.search(text):
+                    fail(errors, f"mtg-deckbuilder/SKILL.md restates a target; keep numbers in principles.md: {pattern.pattern}")
 
     playbook = SKILLS / "rk-mtg-commander-deck-playbook" / "SKILL.md"
     if playbook.is_file():

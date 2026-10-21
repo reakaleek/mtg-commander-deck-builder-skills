@@ -1,6 +1,6 @@
 # Commander deck builder skills
 
-Seven Agent Skills for building, reviewing, piloting, and goldfishing Commander decks. Archidekt text is the list format. Install the whole repo. The Skills CLI does not resolve skill-to-skill dependencies, so installing only a high-level skill is incomplete.
+Eight Agent Skills for building, reviewing, piloting, and goldfishing Commander decks. Archidekt text is the list format. Install the whole repo. The Skills CLI does not resolve skill-to-skill dependencies, so installing only a high-level skill is incomplete.
 
 The repository is private. GitHub auth is required.
 
@@ -9,11 +9,17 @@ npx skills add reakaleek/mtg-commander-deck-builder-skills
 npx skills add reakaleek/mtg-commander-deck-builder-skills --list
 ```
 
-Confirm the list shows all seven names: `rk-mtg-commander-deck-builder`, `rk-mtg-commander-deck-playbook`, `rk-mtg-scryfall`, `rk-mtg-edhrec`, `rk-mtg-archidekt`, `rk-mtg-goldfish`, and `rk-mtg-spellbook`.
+Confirm the list shows all eight names: `mtg-deckbuilder`, `rk-mtg-commander-deck-builder`, `rk-mtg-commander-deck-playbook`, `rk-mtg-scryfall`, `rk-mtg-edhrec`, `rk-mtg-archidekt`, `rk-mtg-goldfish`, and `rk-mtg-spellbook`.
 
 ## Usage
 
 Talk to the agent in plain language. The skill descriptions decide which skill starts. You do not run the helpers yourself unless you want a raw lookup.
+
+### Lean build, review, and playtest loop
+
+`mtg-deckbuilder` is a smaller, from-scratch alternative to `rk-mtg-commander-deck-builder`, grounded in a fixed set of sources (two Command Zone episodes, one Commander Challenge video, TCGplayer's land-count regression, and Draftsim's mana-curve guide). Every target number lives in its single reference file, `principles.md`.
+
+It has three workflows: **build** (plan → role skeleton → land formula → constraint checks), **review / cuts** (tag every card by role, compare against the skeleton, name the 3–5 biggest problems, propose same-role swaps, recount), and a **playtest loop** that appends each reported game to `~/mtg/<deck>.log.md` and only acts on patterns across the whole log. Table rules come from memory or the user, never from the skill. It never writes a deck file without an explicit OK on the specific swaps.
 
 ### Build a new deck
 
@@ -123,6 +129,7 @@ These are job shapes. Fill in your commander, list, path, and budget when you ha
 
 | Skill | Needs | Does |
 | --- | --- | --- |
+| `mtg-deckbuilder` | `rk-mtg-scryfall`, `rk-mtg-archidekt`, `rk-mtg-edhrec`, `rk-mtg-spellbook`; `rk-mtg-goldfish` optional. Degrades if one is missing | Lean build, role-count review, and playtest log loop |
 | `rk-mtg-commander-deck-builder` | `rk-mtg-scryfall`, `rk-mtg-edhrec`, `rk-mtg-archidekt`, `rk-mtg-goldfish`, and `rk-mtg-spellbook` | Interview, build or review, keep the canonical file |
 | `rk-mtg-commander-deck-playbook` | `rk-mtg-scryfall` | Write a piloting guide. Never rewrite the deck file |
 | `rk-mtg-scryfall` | nothing else | Oracle, legality, search, prices, parse, validate, deck-stats, write |
@@ -135,6 +142,7 @@ If a high-level skill stops and tells you to install the full repo, a helper is 
 
 ## Skills
 
+- `mtg-deckbuilder` builds, reviews by role counts and a land formula, and tunes from a dated playtest log
 - `rk-mtg-commander-deck-builder` interviews, then builds or reviews a list and keeps one canonical Archidekt-safe file
 - `rk-mtg-commander-deck-playbook` writes a piloting guide for a finished list and does not change that file
 - `rk-mtg-scryfall` looks up Oracle text, legality, searches, prices, deck-stats, and Archidekt parse or validate
