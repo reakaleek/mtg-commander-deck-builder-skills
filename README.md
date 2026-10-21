@@ -9,45 +9,25 @@ npx skills add reakaleek/mtg-commander-deck-builder-skills
 npx skills add reakaleek/mtg-commander-deck-builder-skills --list
 ```
 
-Confirm the list shows all seven names: `rk-mtg-commander-deck-builder`, `rk-mtg-commander-deck-playbook`, `rk-mtg-scryfall`, `rk-mtg-edhrec`, `rk-mtg-archidekt`, `rk-mtg-goldfish`, and `rk-mtg-spellbook`.
+Confirm the list shows all seven names: `mtg-deckbuilder`, `rk-mtg-commander-deck-playbook`, `rk-mtg-scryfall`, `rk-mtg-edhrec`, `rk-mtg-archidekt`, `rk-mtg-goldfish`, and `rk-mtg-spellbook`.
 
 ## Usage
 
 Talk to the agent in plain language. The skill descriptions decide which skill starts. You do not run the helpers yourself unless you want a raw lookup.
 
-### Build a new deck
+### Build, review, or tune a deck
 
-Ask to build a Commander deck. `rk-mtg-commander-deck-builder` should start.
+Ask to build an EDH deck, review or trim a list, pick cuts, or tell it how a game went. `mtg-deckbuilder` should start.
 
-Bring what you already know:
+The skill is grounded in a fixed set of sources: two Command Zone episodes, one Commander Challenge video, TCGplayer's land-count regression, and Draftsim's mana-curve guide. Every target number (role counts, curve, land formula) lives in its single reference file, `principles.md`. The targets are starting points; your play experience outranks them.
 
-- Commander, or say you want help picking one
-- Theme and how you want to win
-- Power or bracket, pet cards, house bans
-- Budget only if you have one, plus currency. Say whether that means total list value or extra upgrade spend, whether owned cards count, and whether proxies are allowed.
-- A path for the canonical deck file
+Before anything else it establishes the table rules: bracket, Game Changer limit, budget and price basis, combo rules, pod meta. It reads them from memory or asks; none are built in. It never writes a deck file without your explicit OK on the specific swaps, and it presents every change as cut → add with the role and price delta.
 
-The skill interviews first. It does not guess commander, budget, pets, or table rules. The last question is whether anything else matters. Answers there are hard constraints.
+**Build.** It defines the plan in two or three steps, fills the skeleton by role from EDHREC theme pages, and sets the land count with the formula. It then checks budget, Game Changers, and Spellbook combos, and writes an Archidekt-importable `quantity + exact name` list to `~/mtg/<deck>.txt` once you approve. After import, mark the command-zone card or cards as Commander in Archidekt. The text block cannot keep that flag.
 
-It then writes one Archidekt-safe text file at the path you approved. That file is the accepted list: only `quantity + exact Oracle name` per line. Partial builds may sit in the file until you call the deck final.
+**Review / cuts.** Bring an Archidekt URL or a local file. It tags every card by role, compares counts, curve, and lands against the skeleton, and names the three to five biggest problems. It proposes same-role swaps, then recounts everything as it would look after the changes.
 
-You get category counts, package notes, and a copy-only **Archidekt import** block that matches the file. After import, mark the command-zone card or cards as Commander or Premier in Archidekt. The text block cannot keep that flag.
-
-The builder may offer a playbook when the list is final. It will not write one unless you ask.
-
-### Review an existing list
-
-Ask to review an EDH list, find synergies, or propose upgrades. Same skill.
-
-Bring a pasted Archidekt export, an Archidekt deck URL, or a local file. If you already have a local file, say whether that file should become the canonical file before anything overwrites it.
-
-The review diagnoses the deck as a system before touching cards: commander fit, structural counts, package reliability, dependencies, win conditions, and an interaction answer matrix, scaled to how deep your request goes. Only after that does it rank the current weakest slots and write an upgrade strategy first, then ranked cut-to-add swaps. Each swap shows both Oracle texts. Proposed swaps stay in the report. The file changes only after you accept a swap or a batch.
-
-Complex reviews may delegate bounded systems, mana, meta, discovery, replacement, or budget analysis. One coordinator keeps the live deck snapshot, thesis, constraints, and change ledger; specialists neither build competing lists nor vote on the result. Every recommended replacement receives an adversarial stress test, and “no change” is a valid recommendation. The complete swap batch is also checked for combined damage to package density, coverage, budget, and the deck thesis.
-
-You get two copy-only Archidekt blocks: the full accepted list, then a **buy list** of only the cards you still need to purchase. Say which cards you already own, and whether a proxy counts as owned. The buy list is not written into the canonical deck file.
-
-If you set a budget, prices come from `rk-mtg-scryfall` in the currency you named. Additional-spend budgets price the buy list. Missing prices stay unknown. Low EDHREC inclusion is not a cut reason by itself.
+**Playtest loop.** Tell it how a game felt, in your own words. It appends a dated entry to `~/mtg/<deck>.log.md`, reads the whole log, and only acts on patterns across games. It asks one to three follow-up questions if the report is vague, and records the swaps you accept on that entry.
 
 ### Pilot a finished deck
 
@@ -55,7 +35,7 @@ Ask for a deck playbook, how to play the list, mulligans, sequencing, combo line
 
 Bring the canonical file or the same Archidekt export. Confirm the command-zone cards if the export does not mark them. Say how experienced you are and how deep you want the guide.
 
-The playbook explains the submitted list. It does not replace cards. If a line is missing a piece, it states the play limit and can hand you back to the builder. It writes Markdown in chat. It saves a file only if you ask.
+The playbook explains the submitted list. It does not replace cards. If a line is missing a piece, it states the play limit and can hand you to `mtg-deckbuilder`. It writes Markdown in chat. It saves a file only if you ask.
 
 This skill needs `rk-mtg-scryfall` so it can parse the list and read Oracle text. It does not need `rk-mtg-edhrec`. Metagame synergy is for choosing cards, not for teaching the cards already in the file. Combo cataloging uses `rk-mtg-spellbook` when that skill is installed.
 
@@ -77,7 +57,7 @@ Share an Archidekt deck link, or ask how to read one. `rk-mtg-archidekt` should 
 
 Ask which combos are in a list, or what bracket Spellbook estimates. `rk-mtg-spellbook` should start.
 
-Those four skills return data. They do not build or review a deck, and they do not call the builder.
+Those four skills return data. They do not build or review a deck, and they do not call `mtg-deckbuilder`.
 
 ### Example prompts
 
@@ -85,15 +65,15 @@ These are job shapes. Fill in your commander, list, path, and budget when you ha
 
 **Build**
 
-> Build a Commander deck. I will give the commander and the rest in chat. Ask until the constraints are clear, then write the canonical file.
-
-> Help me pick a commander for a theme I will describe, then build the list. Ask about power, pets, and whether I have a budget before you write anything.
+> Build a Commander deck. I will give the commander and the table rules in chat. Show the list by role before you write the file.
 
 **Review**
 
-> Review this Archidekt export. Write an upgrade strategy, then ranked swaps. End with a buy list of only the cards I still need to purchase. Do not change the file until I accept a swap.
+> Review this Archidekt deck. Name the biggest problems and propose same-role swaps with price deltas. Do not change the file until I accept a swap.
 
-> Review the list in this file. Ask if that file should become canonical. I will mark cards I already own. Propose budget-aware swaps only if I set a cap and a currency.
+**Playtest**
+
+> Log tonight's game with this deck: I lost on turn nine, stuck on four lands, and ran out of cards after a wipe. Only suggest changes if it's a pattern.
 
 **Playbook**
 
@@ -123,7 +103,7 @@ These are job shapes. Fill in your commander, list, path, and budget when you ha
 
 | Skill | Needs | Does |
 | --- | --- | --- |
-| `rk-mtg-commander-deck-builder` | `rk-mtg-scryfall`, `rk-mtg-edhrec`, `rk-mtg-archidekt`, `rk-mtg-goldfish`, and `rk-mtg-spellbook` | Interview, build or review, keep the canonical file |
+| `mtg-deckbuilder` | `rk-mtg-scryfall`, `rk-mtg-archidekt`, `rk-mtg-edhrec`, `rk-mtg-spellbook`; `rk-mtg-goldfish` optional. Works with reduced checks if one is missing | Build, role-count review, and playtest log loop |
 | `rk-mtg-commander-deck-playbook` | `rk-mtg-scryfall` | Write a piloting guide. Never rewrite the deck file |
 | `rk-mtg-scryfall` | nothing else | Oracle, legality, search, prices, parse, validate, deck-stats, write |
 | `rk-mtg-edhrec` | nothing else | Unofficial inclusion, synergy, theme pages, and average-deck JSON |
@@ -131,11 +111,11 @@ These are job shapes. Fill in your commander, list, path, and budget when you ha
 | `rk-mtg-goldfish` | `rk-mtg-scryfall` for the mana-base check only | Shuffle, mulligan, and play turns round by round, or run a mana-base Monte Carlo check with screw, flood, and sweet-spot odds |
 | `rk-mtg-spellbook` | nothing else | Unofficial combo catalog and bracket estimate |
 
-If a high-level skill stops and tells you to install the full repo, a helper is missing. Run the install command above again. Do not point the agent at a guessed disk path.
+If a skill stops and tells you to install the full repo, a helper is missing. Run the install command above again. Do not point the agent at a guessed disk path.
 
 ## Skills
 
-- `rk-mtg-commander-deck-builder` interviews, then builds or reviews a list and keeps one canonical Archidekt-safe file
+- `mtg-deckbuilder` builds, reviews by role counts and a land formula, and tunes from a dated playtest log
 - `rk-mtg-commander-deck-playbook` writes a piloting guide for a finished list and does not change that file
 - `rk-mtg-scryfall` looks up Oracle text, legality, searches, prices, deck-stats, and Archidekt parse or validate
 - `rk-mtg-edhrec` reads unofficial `json.edhrec.com` inclusion, synergy, theme, and average-deck pages
