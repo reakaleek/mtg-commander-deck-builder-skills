@@ -184,6 +184,7 @@ When the helper and the table disagree, quote the table and show the arithmetic.
 - **Resilience** (V3): build the plan around not losing. Layer resilience into the plan's own cards: lifegain, threats on artifacts or enchantments, recursion, land ramp (lands rarely die). A "layer" that needs its own package is a side plan (V1 trap).
 - **Rebuild after a wipe** (V4): a full hand, a ramp lead, recursion and key pieces at MV ≤ 3 let the deck redeploy within a turn or two. Key pieces that aren't creatures dodge most wipes: removal gets scarcer from creature → artifact → enchantment → planeswalker → land, and vehicles or permanents that aren't creatures on opponents' turns dodge creature wipes. Cheap fodder means blocking doesn't cost an engine piece.
 - **Survives losing the commander?** Count how many cards go dead if the commander is answered (V1).
+- **Hide the finish** (V4): the table attacks what it can see. A deck whose winning power is mostly in hand (finishers that win the turn they're cast, haste or flash threats, instant-speed or one-shot wincons) looks smaller than it is. A deck that wins from engines already on the board shows its threat a full turn cycle early and gets answered or attacked first. Lots of small pieces that each look harmless also hide power, because opponents misjudge the board.
 - **Instant speed** (V3): prefer modal, instant-speed and activated options so decisions can wait until the end step before your turn.
 - **Clear win check** (V3): goldfish to the target win turn and ask: can I win? Is there a card that would win from here? Is there enough value on board? Is there enough draw to find the wincon? If not, add wincon density or on-plan draw.
 
@@ -248,6 +249,7 @@ Pass/fail checks for a finished list or a proposed change set. In a review, run 
 | E20 | Multiplayer scaling | Engine and payoff cards that fire once per four turns (attack-only, your-turn-only) each have a named reason; where a version that scales with 3 opponents fits the same role, it's preferred (V4) | §5 |
 | E21 | Rebuild | Goldfish a wipe at the deck's usual peak: it redeploys a working board within 1–2 turns from hand, recursion or cheap key pieces. Key engine pieces aren't all creatures, or they're protected or recurrable (V4) | §4 |
 | E22 | Multi-role | The commander covers ≥ 2 of card advantage, ramp and payoff, or the 99 does. Most non-land slots fill 2 roles or are the best in their one role (V4) | §5 |
+| E23 | Hidden finish | Most wincons can win from hand the turn they're cast (haste, flash, instant, one-shot finishers) rather than sitting on the board for a turn cycle first. A board-based finish has protection or redundancy (V4) | §4 |
 
 **Goldfish symptoms → role** (V1, V3), for `rk-mtg-goldfish` runs or the user's game reports:
 
@@ -265,5 +267,6 @@ Pass/fail checks for a finished list or a proposed change set. In a review, run 
 | Wins far faster than the pod | Power fit (E14) |
 | One wipe ends the game for this deck | Rebuild (E21) |
 | Engines trigger rarely; deck feels slow at a full table | Multiplayer scaling (E20) |
+| Gets attacked or answered first, the turn before it would win | Hidden finish (E23) |
 
 Goldfish before buying cards. Goldfishing also shows which opening hands to keep: mulligan hands with no draw (V1).
