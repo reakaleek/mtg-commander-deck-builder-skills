@@ -48,19 +48,20 @@ Plain `.txt` lists don't mark the commander, so always pass the commander name. 
 2. **Define the plan** (principles §4): a log line, 2–3 steps, the commander's role, and the wincon(s). Confirm it with the user before filling slots.
 3. **Fill the skeleton by role** (§1) using EDHREC theme pages, not the blended average deck (§6.1). Prefer cards that fill two roles. Fill the plan as enablers > payoffs > enhancers.
 4. **Shape the curve** (§2) to the plan, and match ramp to the commander's MV (§5).
-5. **Lands** via the formula (§3): run `deck-stats`, compute avgMV and the cheap count, show the arithmetic, round up. Then check sources against pips and the basic count.
+5. **Lands** via the formula (§3): run `deck-stats`, compute avgMV and the cheap count, show the arithmetic, round up. Then build the mana base per §3a and size colors with §3b (show the arithmetic): colored sources (untapped for turn-1 plays), tapped-land budget, basics for every fetch effect.
 6. **Check constraints**: total price, Game Changer count, Spellbook combos against the combo rules, bracket estimate. Fix violations with same-role swaps.
-7. Show the list grouped by role, with counts vs. targets. After the user's OK, write an Archidekt-importable list (`1 Card Name` lines only) to `~/mtg/<deck>.txt` via `rk-mtg-scryfall write-deck`.
+7. **Run the evals** (§7) on the draft and fix failures with same-role swaps. Offer an `rk-mtg-goldfish` mana check before the user buys anything.
+8. Show the list grouped by role, with counts vs. targets. After the user's OK, write an Archidekt-importable list (`1 Card Name` lines only) to `~/mtg/<deck>.txt` via `rk-mtg-scryfall write-deck`.
 
 ## B. REVIEW / CUTS
 
 1. Load the deck (Archidekt URL → `fetch --out`, or `~/mtg/<deck>.txt`). Read `~/mtg/<deck>.log.md` if it exists, plus memory notes for this deck.
 2. Run `deck-stats` and `prices`. Check budget and GC count first; constraint violations are problems before anything else.
 3. **Tag every card** (§1 tags, with secondaries) from oracle text. Show the tag table compactly.
-4. **Compare** role counts, curve and land count (formula) against principles §1–3, and walk the §6 traps.
-5. **Name the 3–5 biggest problems**, most impactful first. Each one needs a number (e.g. "Draw 7 vs ≥12") or a named trap.
+4. **Run the evals** (§7): every row, pass/fail, with the number behind each failure. They cover the §1–3 targets and the §6 traps.
+5. **Name the 3–5 biggest problems**, most impactful first; break ties with §6's most-common order. Each one needs a number (e.g. "Draw 7 vs ≥12") or a failed eval/trap.
 6. **Propose same-role swaps** (§5) that fix those problems: cut → add, role, reason, price delta. Prefer cuts from over-target roles, and adds that fill two roles.
-7. **Recount after the proposed changes**: show before → after for each role, the curve, the land formula and the total price. Then stop and wait for the user's OK.
+7. **Recount after the proposed changes** (eval E13): show before → after for each role, the curve, the land formula and the total price, and re-run any eval that failed. Then stop and wait for the user's OK.
 
 ## C. PLAYTEST LOOP
 
@@ -78,7 +79,7 @@ Log file: `~/mtg/<deck>.log.md`, append-only. Create it with a `# <Deck> playtes
    ```
 3. **Read the whole log** before suggesting anything. Tally recurring problems and cards across entries, and show the tally.
 4. **Act only on patterns**: a problem in 2+ games, or a card that disappointed repeatedly. A single flop is not a cut unless the user says so. When nothing is a pattern yet, say "no change yet" and what to watch for next game.
-5. Map each pattern to a role (e.g. "ran out of gas" → Draw, "no answers" → Targeted/Mass, "screw" → lands/ramp, recomputed with §3). Propose same-role swaps as in B.6–7.
+5. Map each pattern to a role with §7's symptom table (e.g. "ran out of gas" → Draw, "no answers" → Targeted/Mass, "screw" → lands/ramp, recomputed with §3). Propose same-role swaps as in B.6–7.
 6. After the user decides, update **that entry's** `Changes made:` line with the accepted swaps (the only edit allowed to an existing entry). Then write the accepted swaps to the deck file.
 
 ## Output style
