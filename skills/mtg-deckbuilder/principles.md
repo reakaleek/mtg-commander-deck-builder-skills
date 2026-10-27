@@ -8,7 +8,8 @@ Sources: **V1** Command Zone #767 "Stop Falling for these Commander Deckbuilding
 **TCG** TCGplayer "How Many Lands Do You Need in Your Deck? An Updated Analysis" (2022, Karsten regression) ·
 **DS** Draftsim "MTG Mana Curve" (David Royale, 2026) ·
 **SV** ScrollVault "MTG Manabase Guide — Frank Karsten Math 2026" (Karsten's hypergeometric source counts plus ScrollVault's Monte Carlo runs) ·
-**K22** Frank Karsten "How Many Sources Do You Need to Consistently Cast Your Spells? A 2022 Update" (TCGplayer/ChannelFireball, 2022).
+**K22** Frank Karsten "How Many Sources Do You Need to Consistently Cast Your Spells? A 2022 Update" (TCGplayer/ChannelFireball, 2022) ·
+**V4** YouTube gjS2jb5j_Xs "8 deckbuilding secrets" (a creator with 500+ Commander decks; their own experience, not measured data).
 
 All targets are starting points for an untested deck. Once the user has played it, their experience wins (V2: "trust yourself after you've played it").
 
@@ -181,14 +182,17 @@ When the helper and the table disagree, quote the table and show the arithmetic.
 - A plan-specific floor applies even when the commander helps: a spells deck needs 25–30 instants and sorceries before spell payoffs work (V2).
 - **Enablers are the biggest plan bucket**, about 25–30 cards that start the plan (V1). Enhancers: only the best 4–5 (V2).
 - **Resilience** (V3): build the plan around not losing. Layer resilience into the plan's own cards: lifegain, threats on artifacts or enchantments, recursion, land ramp (lands rarely die). A "layer" that needs its own package is a side plan (V1 trap).
+- **Rebuild after a wipe** (V4): a full hand, a ramp lead, recursion and key pieces at MV ≤ 3 let the deck redeploy within a turn or two. Key pieces that aren't creatures dodge most wipes: removal gets scarcer from creature → artifact → enchantment → planeswalker → land, and vehicles or permanents that aren't creatures on opponents' turns dodge creature wipes. Cheap fodder means blocking doesn't cost an engine piece.
 - **Survives losing the commander?** Count how many cards go dead if the commander is answered (V1).
+- **Hide the finish** (V4): the table attacks what it can see. A deck whose winning power is mostly in hand (finishers that win the turn they're cast, haste or flash threats, instant-speed or one-shot wincons) looks smaller than it is. A deck that wins from engines already on the board shows its threat a full turn cycle early and gets answered or attacked first. Lots of small pieces that each look harmless also hide power, because opponents misjudge the board.
 - **Instant speed** (V3): prefer modal, instant-speed and activated options so decisions can wait until the end step before your turn.
 - **Clear win check** (V3): goldfish to the target win turn and ask: can I win? Is there a card that would win from here? Is there enough value on board? Is there enough draw to find the wincon? If not, add wincon density or on-plan draw.
 
 ## 5. Cuts and replacements (V1, V2)
 
 - **Swap within a role**: removal for removal, enabler for enabler. Never cut a land, ramp, draw or disruption card to fit a payoff (V1).
-- A card that fills two roles is the best replacement: it keeps a role and adds one (V1).
+- A card that fills two roles is the best replacement: it keeps a role and adds one (V1). Every deck needs three things: card advantage, ramp (or cheating costs) and payoff. A card that does all three is the strongest pick, and a commander that does all three lets the 99 run cheap, plain cards (V4).
+- **Score cards for four players** (V4). "Each opponent" and "on an opponent's turn" triggers fire 3× as often as in 1v1. Symmetric "any player" triggers fire only 2× as often. Rhystic Study and Smothering Tithe are staples for this reason. Attack triggers and effects that only work on your own turn fire once per four turns. That's a penalty, not a cut (Sol Ring scales badly too). Between two cards in the same role, prefer the one that scales.
 - **Recount the whole deck after every batch** of changes. Many single-card edits drift the numbers (e.g. 34 lands, 6 removal) (V1).
 - Cut order when over 99: (1) bring 6+ drops down to the cap; (2) cut excess non-stacking effects; (3) cut off-plan cards; (4) lands and draw last (V1, V2).
 - **Non-stacking effects** (Crucible-style, fogs, evasion granters, one-shot finishers like Craterhoof, 7-drops): run about 3–5. Test: if a second copy in hand is dead, the effect doesn't stack. Over ~25 cards seen (8-turn game): 3 copies is 59% to see one; 5 copies is 77% to see one and 37% to see two; 7 copies is 88% to see one but 57% to see two, which is too many. More draw lowers the count needed. Self-mill decks with recursion need only 2–3. Replace extras with draw or with cards that fill two roles (V1).
@@ -230,18 +234,22 @@ Pass/fail checks for a finished list or a proposed change set. In a review, run 
 | E5 | Non-stacking | Every effect whose second copy is dead has ≤5 copies (≤3 with self-mill + recursion) | §5 |
 | E6 | Draw | Card advantage ≥ 12, with several at MV ≤ 3 | §1, §5 |
 | E7 | Early interaction | Targeted disruption at target, with cheap (MV ≤ 2) answers present | §1 |
-| E8 | Resilience | No single common hate piece (Torpor Orb, Rest in Peace, an edict, Maze of Ith) blanks most of the plan; the answers to it don't share the weakness; most of a hand still works with the commander removed | §4, trap 4 |
+| E8 | Resilience | No single common hate piece (Torpor Orb, Rest in Peace, an edict, Maze of Ith) blanks most of the plan; the answers to it don't share the weakness; most of a hand still works with the commander removed; any card the plan can't run without has a backup in the 99 or protection (V4) | §4, trap 4 |
 | E9 | Ramp fit | Ramp MV lines up with commander MV; every ramp at MV ≥ 4 has a named reason | §5 |
 | E10 | Curve | 6+ at cap (or an oval ramp/cheat deck); 2 is the largest slot; goldfish turns 2–6 spend nearly all available mana | §2 |
 | E11 | Lands | Count ≥ formula result, rounded up; basics cover every fetch effect; sources match pips | §3 |
 | E12 | Narrow answers | Each one is justified by the pod meta or this deck's weak point | §5 |
 | E13 | Recount | After any change set, every role, curve and land count is recounted and still on target | §5 |
-| E14 | Power fit | Expected win turn and bracket match the pod's | trap 14 |
+| E14 | Power fit | Expected win turn and bracket match the pod's. Explosive effects (mana doublers, extra turns, cast-for-free engines) are the biggest bracket dial: roughly 2 in bracket 2, 3–5 in bracket 3, ~9 in bracket 4 (V4, one builder's rough guide) | trap 14 |
 | E15 | Commander role | Enabler/payoff/enhancer mix matches the commander's role | §4 |
 | E16 | Vegetables | Ramp, Draw, Targeted and Mass all at target; Mass covers creatures, artifacts/enchantments and the graveyard | §1 |
 | E17 | Curve fit | 5s are flexible; 6+ permanents are cheated, reduced or reanimated; the commander's MV slot is thin | §2 |
 | E18 | Colored sources | Each color meets §3b (table scaled to the land count, partial credits applied, gold +1) for its most demanding card; untapped sources cover turn-1 plays; utility lands aren't counted as colored | §3b |
 | E19 | Land quality | Tapped lands within budget, each with a named upside; 3+ colors have real fixing | §3a |
+| E20 | Multiplayer scaling | Engine and payoff cards that fire once per four turns (attack-only, your-turn-only) each have a named reason; where a version that scales with 3 opponents fits the same role, it's preferred (V4) | §5 |
+| E21 | Rebuild | Goldfish a wipe at the deck's usual peak: it redeploys a working board within 1–2 turns from hand, recursion or cheap key pieces. Key engine pieces aren't all creatures, or they're protected or recurrable (V4) | §4 |
+| E22 | Multi-role | The commander covers ≥ 2 of card advantage, ramp and payoff, or the 99 does. Most non-land slots fill 2 roles or are the best in their one role (V4) | §5 |
+| E23 | Hidden finish | Most wincons can win from hand the turn they're cast (haste, flash, instant, one-shot finishers) rather than sitting on the board for a turn cycle first. A board-based finish has protection or redundancy (V4) | §4 |
 
 **Goldfish symptoms → role** (V1, V3), for `rk-mtg-goldfish` runs or the user's game reports:
 
@@ -257,5 +265,8 @@ Pass/fail checks for a finished list or a proposed change set. In a review, run 
 | One half of the plan stranded (sac outlets but nothing to sacrifice, or the reverse) | Rebalance the plan's steps (E4, E15) (V2) |
 | Reaches the target turn with no way to win | Plan or wincon density (E2) |
 | Wins far faster than the pod | Power fit (E14) |
+| One wipe ends the game for this deck | Rebuild (E21) |
+| Engines trigger rarely; deck feels slow at a full table | Multiplayer scaling (E20) |
+| Gets attacked or answered first, the turn before it would win | Hidden finish (E23) |
 
 Goldfish before buying cards. Goldfishing also shows which opening hands to keep: mulligan hands with no draw (V1).

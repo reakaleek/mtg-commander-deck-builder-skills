@@ -80,6 +80,11 @@ Use the playgroup they described.
 Who do you need to answer, and when does this deck want to look smaller than
 it is?
 
+Say how it hides its power: how much of its winning power sits in hand rather
+than on the battlefield, which finishers to hold until the turn they win, and
+which small pieces look harmless to the table. A deck that sits as the obvious
+threat for several turns gets attacked first.
+
 ## What beats this deck
 
 Which plans, hate pieces, or table shapes this list loses to, and what the
