@@ -236,7 +236,7 @@ Pass/fail checks for a finished list or a proposed change set. In a review, run 
 | E7 | Early interaction | Targeted disruption at target, with cheap (MV ≤ 2) answers present | §1 |
 | E8 | Resilience | No single common hate piece (Torpor Orb, Rest in Peace, an edict, Maze of Ith) blanks most of the plan; the answers to it don't share the weakness; most of a hand still works with the commander removed; any card the plan can't run without has a backup in the 99 or protection (V4) | §4, trap 4 |
 | E9 | Ramp fit | Ramp MV lines up with commander MV; every ramp at MV ≥ 4 has a named reason | §5 |
-| E10 | Curve | 6+ at cap (or an oval ramp/cheat deck); 2 is the largest slot; goldfish turns 2–6 spend nearly all available mana | §2 |
+| E10 | Curve | 6+ at cap (or an oval ramp/cheat deck); 2 is the largest slot; across 3+ goldfish games, at most one of turns 2–6 per game leaves 2+ mana unspent. Mana held up counts as spent only up to the cost of instant-speed cards or abilities in hand it could cast (colors included). (Working threshold, not from a source.) | §2 |
 | E11 | Lands | Count ≥ formula result, rounded up; basics cover every fetch effect; sources match pips | §3 |
 | E12 | Narrow answers | Each one is justified by the pod meta or this deck's weak point | §5 |
 | E13 | Recount | After any change set, every role, curve and land count is recounted and still on target | §5 |
