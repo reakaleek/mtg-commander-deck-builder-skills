@@ -63,6 +63,13 @@ life. Say the damage, drain, or mill required, and which pieces supply it.
 
 What to hold answers for, and when to pass with mana up.
 
+Say which answer types are scarce in this list and must be saved for a real
+problem, and which are plentiful enough to spend freely. Name the creatures
+that double as answers by blocking or trading. Spend an answer once there is
+no doubt the threat is aimed at this pilot (an attack declared at them, a
+trigger about to resolve), and say when taking damage is better than losing
+a card.
+
 Skip generic "always hold a counter" advice that would apply to any deck.
 
 ## Pivot and recovery
