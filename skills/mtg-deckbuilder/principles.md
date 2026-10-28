@@ -41,7 +41,7 @@ All targets are starting points for an untested deck. Once the user has played i
 ## 1a. Disruption package (V5)
 
 - **Count by speed.** §1's 12 Targeted + 6 Mass fits a midrange bracket-3 deck. A deck that needs more time to win runs more (14–15; grindy control 20+). Aggro can run fewer, never zero. A Mass-heavy deck can trade Targeted slots for Mass (e.g. 10 + 8).
-- **Split Targeted by what it hits** (one host's working ratio for 12): 5–6 creature-only, ~3 artifact/enchantment, ~2 flexible (any nonland permanent), ~2 that can answer a land (utility lands like Ghost Quarter count). If every Mass card kills creatures, shift a slot or two from creature answers to artifact/enchantment answers; if the Mass suite skips creatures, shift the other way.
+- **Split Targeted by what it hits** (one host's working ratio for 12): 5–6 creature-only, ~3 artifact/enchantment, ~2 flexible (any nonland permanent), ~2 that can answer a land (utility lands like Ghost Quarter count). If every Mass card kills creatures, shift a slot or two from creature answers to artifact/enchantment answers; if the Mass suite skips creatures, shift the other way. Your own creatures shift it too, since they handle attackers: a dedicated goad deck (several goads a turn) needs little creature spot removal, because goaded creatures attack elsewhere and often die, so it moves those slots to artifact/enchantment answers. A deck with few creatures needs more creature answers.
 - **Take each job from the color that does it best:**
   - White: any permanent type, with exile. The best removal color.
   - Blue: counters, bounce, tuck. Bounce buys time like removal. Little hard removal once a permanent resolves.
