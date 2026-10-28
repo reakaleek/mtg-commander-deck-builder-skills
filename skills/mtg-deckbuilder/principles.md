@@ -205,7 +205,8 @@ When the helper and the table disagree, quote the table and show the arithmetic.
 - **Resilience** (V3): build the plan around not losing. Layer resilience into the plan's own cards: lifegain, threats on artifacts or enchantments, recursion, land ramp (lands rarely die). A "layer" that needs its own package is a side plan (V1 trap).
 - **Rebuild after a wipe** (V4): a full hand, a ramp lead, recursion and key pieces at MV ≤ 3 let the deck redeploy within a turn or two. Key pieces that aren't creatures dodge most wipes: removal gets scarcer from creature → artifact → enchantment → planeswalker → land, and vehicles or permanents that aren't creatures on opponents' turns dodge creature wipes. Cheap fodder means blocking doesn't cost an engine piece.
 - **Survives losing the commander?** Count how many cards go dead if the commander is answered (V1).
-- **Build for being behind** (V5): at a table of four even decks, any one player is not in the lead about 75% of the time, so "behind" is the normal state. A deck stronger than its pod is behind less often; the pod meta overrides this default. Score borderline cards by how they play from behind: draw engines, answers, wipes, recursion, flexible instants and "each opponent" effects help you catch up. Anthems, doublers, extra combats and cards that need a board you don't have yet are good only when ahead; treat them like enhancers (best 4–5 at most). This is about table position, not consistency: a deck can have a high floor and still have nothing to do once someone else is out in front. Rebuild (E21) and the disruption package (§1a) are the main catch-up tools.
+- **Build for being behind** (V5): at a table of four even decks, any one player is not in the lead about 75% of the time, so "behind" is the normal state. A deck stronger than its pod is behind less often; the pod meta overrides this default. Score borderline cards by how they play from behind. This is about table position, not consistency: a deck can have a high floor and still have nothing to do once someone else is out in front. Rebuild (E21) and the disruption package (§1a) are the main catch-up tools.
+  - *Own extension, not from V5:* sort cards by whether they **make** resources (draw, answers, tokens, recursion, ramp) or **multiply** ones already on the board (anthems, doublers, extra combats). Makers help from any position; multipliers need a board first. A multiplier the plan depends on (a go-wide deck's anthems, which §1 counts as payoffs) stays a payoff. Other multipliers count against the enhancer cap (E4).
 - **Hide the finish** (V4): the table attacks what it can see. A deck whose winning power is mostly in hand (finishers that win the turn they're cast, haste or flash threats, instant-speed or one-shot wincons) looks smaller than it is. A deck that wins from engines already on the board shows its threat a full turn cycle early and gets answered or attacked first. Lots of small pieces that each look harmless also hide power, because opponents misjudge the board.
 - **Instant speed** (V3): prefer modal, instant-speed and activated options so decisions can wait until the end step before your turn.
 - **Clear win check** (V3): goldfish to the target win turn and ask: can I win? Is there a card that would win from here? Is there enough value on board? Is there enough draw to find the wincon? If not, add wincon density or on-plan draw.
@@ -253,7 +254,7 @@ Pass/fail checks for a finished list or a proposed change set. In a review, run 
 | E1 | Constraints | Budget, Game Changer count, combo rules and bracket all within table rules | same-role swap (§5) |
 | E2 | Plan | Log line names one finisher type; ≤3 steps; step 1 is useful alone | §4 |
 | E3 | One direction | No two payoff groups in contention; no off-plan side packages | §4, trap 3 |
-| E4 | Enablers | Enablers ≥ 25 and > payoffs + enhancers; enhancers plus cards that are only good when ahead ≤ best 4–5 (V5) | §4 |
+| E4 | Enablers | Enablers ≥ 25 and > payoffs + enhancers; enhancers plus multipliers that aren't the plan's payoffs ≤ best 4–5 (§4 build for being behind) | §4 |
 | E5 | Non-stacking | Every effect whose second copy is dead has ≤5 copies (≤3 with self-mill + recursion) | §5 |
 | E6 | Draw | Card advantage ≥ 12, with several at MV ≤ 3 | §1, §5 |
 | E7 | Early interaction | Targeted disruption at target, with cheap (MV ≤ 2) answers present | §1 |
@@ -271,7 +272,7 @@ Pass/fail checks for a finished list or a proposed change set. In a review, run 
 | E19 | Land quality | Tapped lands within budget, each with a named upside; 3+ colors have real fixing | §3a |
 | E20 | Multiplayer scaling | Engine and payoff cards that fire once per four turns (attack-only, your-turn-only) each have a named reason; where a version that scales with 3 opponents fits the same role, it's preferred (V4) | §5 |
 | E21 | Rebuild | Goldfish a wipe at the deck's usual peak: it redeploys a working board within 1–2 turns from hand, recursion or cheap key pieces. Key engine pieces aren't all creatures, or they're protected or recurrable (V4) | §4 |
-| E22 | Multi-role | The commander covers ≥ 2 of card advantage, ramp and payoff, or the 99 does. Most non-land slots fill 2 roles or are the best in their one role (V4). Between two otherwise equal cards, the one that's good from behind wins (V5) | §5, §4 |
+| E22 | Multi-role | The commander covers ≥ 2 of card advantage, ramp and payoff, or the 99 does. Most non-land slots fill 2 roles or are the best in their one role (V4). Between two otherwise equal cards, the one that makes resources beats the one that only multiplies them (§4 build for being behind) | §5, §4 |
 | E23 | Hidden finish | Most wincons can win from hand the turn they're cast (haste, flash, instant, one-shot finishers) rather than sitting on the board for a turn cycle first. A board-based finish has protection or redundancy (V4) | §4 |
 | E24 | Answer split | Targeted covers creatures, artifacts/enchantments and lands, plus a couple of flexible answers, near §1a's split after shifting for Mass coverage. Each permanent type that stops this deck's plan has at least 2 answers (V5) | §1a |
 | E25 | Color fit | Each answer comes from the deck's best color for that job. Every give-back catch-all has a named reason: no better on-color answer for that job (V5) | §1a, trap 17 |
@@ -299,6 +300,6 @@ Pass/fail checks for a finished list or a proposed change set. In a review, run 
 | Removal sits in hand because casting it costs the whole turn | Answer quality (E26), timing fit (E27) |
 | A permanent type sticks and nothing in the deck answers it | Answer split (E24), color fit (E25) |
 | Blockers or a lock stop the final attack | Timing fit (E27) |
-| Falls behind early and never catches up | Draw (E6), timing fit (E27), rebuild (E21), ahead-only cards over the cap (E4) |
+| Falls behind early and never catches up | Draw (E6), timing fit (E27), rebuild (E21), multipliers over the cap (E4) |
 
 Goldfish before buying cards. Goldfishing also shows which opening hands to keep: mulligan hands with no draw (V1).
