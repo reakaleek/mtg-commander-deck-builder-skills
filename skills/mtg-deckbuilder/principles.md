@@ -54,6 +54,7 @@ All targets are starting points for an untested deck. Once the user has played i
 - **Fit the timing to when the deck is weakest.**
   - Weak early (control, big ramp, setup-heavy): most answers at MV ≤ 2, castable beside a setup piece, aimed at snowballing engines. Efficiency matters more than instant speed; the deck rarely dies in the first four turns.
   - Weak late (aggro, the early threat): some high-impact, multi-target or one-sided answers that clear blockers or a lock for the final attack. Sorcery speed is fine here.
+  - *Own heuristic, not from V5:* classify the deck from its plan steps (§4). If step 1 needs setup turns before it affects the table (ramp into payoffs, an engine that must assemble, a commander that needs support first) and the deck shows little board early, it's early-weak. If step 1 pressures the table on its own and the deck has nothing that breaks through once opponents stabilize, it's late-weak. A deck can be both; check each side. Playtest reports settle it (§7 symptom rows).
 - **Cover the deck's weak points; skip what the plan already handles.** Go-wide and token decks need little combat defense and no anti-Voltron. Voltron needs land answers (Maze of Ith-style) and enchantment answers. Self-mill feeds opponents' graveyards, so run extra graveyard hate. Creature combat wins most casual games (the hosts estimate 70%+), so creature answers are the base. Don't add answers after one loss to a rare strategy (§5 narrow answers).
 - **Prefer on-plan answers:** ETB-removal creatures in blink or recursion decks, removal lands in land decks, instants in spells decks and in any deck that holds mana up for other instants.
 - **Table reputation.** If the pod targets this player early, run more interaction and fewer exposed setup pieces.
@@ -277,7 +278,7 @@ Pass/fail checks for a finished list or a proposed change set. In a review, run 
 | E24 | Answer split | Targeted covers creatures, artifacts/enchantments and lands, plus a couple of flexible answers, near §1a's split after shifting for Mass coverage. Each permanent type that stops this deck's plan has at least 2 answers (V5) | §1a |
 | E25 | Color fit | Each answer comes from the deck's best color for that job. Every give-back catch-all has a named reason: no better on-color answer for that job (V5) | §1a, trap 17 |
 | E26 | Answer quality | Each Targeted card is cheap (MV ≤ 2) or has a named extra (instant speed plus a second target, a card back, an on-plan synergy, a static upside). None costs more than the threats it usually answers without such an extra (V5) | §1a |
-| E27 | Timing fit | The disruption profile matches when the deck is weakest: early-weak decks have most answers at MV ≤ 2; late-weak or aggro decks have at least a couple of high-impact or multi-target answers that clear the way to the final attack (V5) | §1a |
+| E27 | Timing fit | The deck is classified early-weak, late-weak or both from its plan steps (§1a), and the disruption profile matches: early-weak decks have most answers at MV ≤ 2; late-weak or aggro decks have at least a couple of high-impact or multi-target answers that clear the way to the final attack (V5) | §1a |
 
 **Goldfish symptoms → role** (V1, V3), for `rk-mtg-goldfish` runs or the user's game reports:
 
