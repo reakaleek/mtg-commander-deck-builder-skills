@@ -45,7 +45,7 @@ All targets are starting points for an untested deck. Once the user has played i
 - **Take each job from the color that does it best:**
   - White: any permanent type, with exile. The best removal color.
   - Blue: counters, bounce, tuck, some goad. Bounce buys time like removal. Little hard removal once a permanent resolves.
-  - Black: creatures (destroy, −X/−X, edicts). Weak against enchantments, no answers to artifacts.
+  - Black: creatures (destroy, −X/−X, edicts). Weak against enchantments, almost no answers to artifacts (per V5).
   - Red: small creatures (damage caps out), artifacts, lands, goad (the main goad color). Almost nothing for enchantments.
   - Green: artifacts, enchantments, lands. Creature removal is fight-based and risky; its creatures defend instead.
   - Two-color answers in the deck's pair (W/B exile, B/G any permanent) beat generic catch-alls. Catch-alls that hand something back (Beast Within, Chaos Warp, Generous Gift) belong only where the deck's colors lack a better answer for the same job.
@@ -244,7 +244,7 @@ V1's most common mistakes, in order: **#3 trying to do too much**, **#8 enablers
 14. Tuned past the pod's power level. Agree on limits with the pod (bracket, personal rules like no tutors) and raise power slowly. Toning a deck down after overbuilding rarely satisfies anyone, and some commanders can't be toned down at all.
 15. Colored sources short of pips (V3, DS).
 16. No clear way to win (V3).
-17. Removal from the wrong color: generic catch-alls or off-color-weak answers where the deck's colors have a cheaper or cleaner one (V5).
+17. Removal from the wrong color: generic catch-alls, or answers from a color that's weak at that job, where the deck's colors have a cheaper or cleaner one (V5).
 
 ## 7. Evals (V1 unless tagged)
 
@@ -255,7 +255,7 @@ Pass/fail checks for a finished list or a proposed change set. In a review, run 
 | E1 | Constraints | Budget, Game Changer count, combo rules and bracket all within table rules | same-role swap (§5) |
 | E2 | Plan | Log line names one finisher type; ≤3 steps; step 1 is useful alone | §4 |
 | E3 | One direction | No two payoff groups in contention; no off-plan side packages | §4, trap 3 |
-| E4 | Enablers | Enablers ≥ 25 and > payoffs + enhancers; enhancers plus multipliers that aren't the plan's payoffs ≤ best 4–5 (§4 build for being behind) | §4 |
+| E4 | Enablers | Enablers ≥ 25 and > payoffs + enhancers; enhancers, including multipliers that aren't the plan's payoffs, ≤ best 4–5 (§4 build for being behind) | §4 |
 | E5 | Non-stacking | Every effect whose second copy is dead has ≤5 copies (≤3 with self-mill + recursion) | §5 |
 | E6 | Draw | Card advantage ≥ 12, with several at MV ≤ 3 | §1, §5 |
 | E7 | Early interaction | Targeted disruption at target, with cheap (MV ≤ 2) answers present | §1 |
@@ -275,10 +275,10 @@ Pass/fail checks for a finished list or a proposed change set. In a review, run 
 | E21 | Rebuild | Goldfish a wipe at the deck's usual peak: it redeploys a working board within 1–2 turns from hand, recursion or cheap key pieces. Key engine pieces aren't all creatures, or they're protected or recurrable (V4) | §4 |
 | E22 | Multi-role | The commander covers ≥ 2 of card advantage, ramp and payoff, or the 99 does. Most non-land slots fill 2 roles or are the best in their one role (V4). Between two otherwise equal cards, the one that makes resources beats the one that only multiplies them (§4 build for being behind) | §5, §4 |
 | E23 | Hidden finish | Most wincons can win from hand the turn they're cast (haste, flash, instant, one-shot finishers) rather than sitting on the board for a turn cycle first. A board-based finish has protection or redundancy (V4) | §4 |
-| E24 | Answer split | Targeted covers creatures, artifacts/enchantments and lands, plus a couple of flexible answers, near §1a's shares after shifting for Mass coverage and the deck's own creatures (goad, creature count). Each permanent type that stops this deck's plan has at least 2 answers (V5) | §1a |
+| E24 | Answer split | Targeted covers creatures and artifacts/enchantments, plus a couple of flexible answers, near §1a's shares after shifting for Mass coverage and the deck's own creatures (goad, creature count). Each permanent type that stops this deck's plan has at least 2 answers. Land answers are required only for Voltron decks or pods with problem lands; utility lands cover them without a spell slot (V5, §5 narrow answers) | §1a |
 | E25 | Color fit | Each answer comes from the deck's best color for that job. Every give-back catch-all has a named reason: no better on-color answer for that job (V5) | §1a, trap 17 |
-| E26 | Answer quality | Each Targeted card is cheap (MV ≤ 2) or has a named extra (instant speed plus a second target, a card back, an on-plan synergy, a static upside). None costs more than the threats it usually answers without such an extra (V5) | §1a |
-| E27 | Timing fit | The deck is classified early-weak, late-weak or both from its plan steps (§1a), and the disruption profile matches: early-weak decks have most answers at MV ≤ 2; late-weak or aggro decks have at least a couple of high-impact or multi-target answers that clear the way to the final attack (V5) | §1a |
+| E26 | Answer quality | Each Targeted card is cheap (MV ≤ 2) or has a named extra (a second target, a card back, an on-plan synergy, a static upside). None costs more than the threats it usually answers without such an extra (V5) | §1a |
+| E27 | Timing fit | The deck is classified early-weak, late-weak or both from its plan steps (§1a), and the disruption profile matches: early-weak decks have most answers at MV ≤ 2; late-weak or aggro decks have at least a couple of high-impact or multi-target answers that clear the way to the final attack; decks that are both have the cheap early answers and a couple of those closers (V5) | §1a |
 
 **Goldfish symptoms → role** (V1, V3), for `rk-mtg-goldfish` runs or the user's game reports:
 
