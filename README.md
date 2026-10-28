@@ -19,7 +19,7 @@ Talk to the agent in plain language. The skill descriptions decide which skill s
 
 Ask to build an EDH deck, review or trim a list, pick cuts, or tell it how a game went. `mtg-deckbuilder` should start.
 
-The skill is grounded in a fixed set of sources: two Command Zone episodes, one Commander Challenge video, TCGplayer's land-count regression, and Draftsim's mana-curve guide. Every target number (role counts, curve, land formula) lives in its single reference file, `principles.md`. The targets are starting points; your play experience outranks them.
+The skill is grounded in a fixed set of sources: three Command Zone episodes, one Commander Challenge video, TCGplayer's land-count regression, and Draftsim's mana-curve guide. Every target number (role counts, curve, land formula) lives in its single reference file, `principles.md`. The targets are starting points; your play experience outranks them.
 
 Before anything else it establishes the table rules: bracket, Game Changer limit, budget and price basis, combo rules, pod meta. It reads them from memory or asks; none are built in. It never writes a deck file without your explicit OK on the specific swaps, and it presents every change as cut → add with the role and price delta.
 

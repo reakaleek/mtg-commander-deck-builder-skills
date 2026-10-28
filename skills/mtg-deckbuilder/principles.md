@@ -9,7 +9,8 @@ Sources: **V1** Command Zone #767 "Stop Falling for these Commander Deckbuilding
 **DS** Draftsim "MTG Mana Curve" (David Royale, 2026) ·
 **SV** ScrollVault "MTG Manabase Guide — Frank Karsten Math 2026" (Karsten's hypergeometric source counts plus ScrollVault's Monte Carlo runs) ·
 **K22** Frank Karsten "How Many Sources Do You Need to Consistently Cast Your Spells? A 2022 Update" (TCGplayer/ChannelFireball, 2022) ·
-**V4** YouTube gjS2jb5j_Xs "8 deckbuilding secrets" (a creator with 500+ Commander decks; their own experience, not measured data).
+**V4** YouTube gjS2jb5j_Xs "8 deckbuilding secrets" (a creator with 500+ Commander decks; their own experience, not measured data) ·
+**V5** Command Zone #762 "You Might Be Thinking About Removal Wrong" (hosts' experience, not measured data).
 
 All targets are starting points for an untested deck. Once the user has played it, their experience wins (V2: "trust yourself after you've played it").
 
@@ -36,6 +37,26 @@ All targets are starting points for an untested deck. Once the user has played i
 - **Draw borderline cases** (V2): Sylvan Library counts only if you will pay life with it. Mindstone and Sensei's Divining Top only replace themselves, so they don't count. The lower your card quality or the more specific pieces the plan needs, the more draw it needs. Run 15 if you can; draw makes up for being short in other roles.
 - **Mass vs. Targeted** (V2): it's Mass if after casting it you are at card parity or better against **each** opponent (Grasp of Fate-style one-per-opponent counts). It's Targeted if any opponent comes out a card ahead. Fogs, Teferi's Protection-style effects, and static taxes or "enters tapped" pieces are Mass because they disrupt a whole turn. A deck heavy in Mass explains why opponents dislike playing against it.
 - Tag by hand rather than trusting an auto-tagger; sorting cards yourself shows how the deck works and which cards fill two roles (V2).
+
+## 1a. Disruption package (V5)
+
+- **Count by speed.** §1's 12 Targeted + 6 Mass fits a midrange bracket-3 deck. A deck that needs more time to win runs more (14–15; grindy control 20+). Aggro can run fewer, never zero. A Mass-heavy deck can trade Targeted slots for Mass (e.g. 10 + 8).
+- **Split Targeted by what it hits** (one host's working ratio for 12): 5–6 creature-only, ~3 artifact/enchantment, ~2 flexible (any nonland permanent), ~2 that can answer a land (utility lands like Ghost Quarter count). If every Mass card kills creatures, shift a slot or two from creature answers to artifact/enchantment answers; if the Mass suite skips creatures, shift the other way.
+- **Take each job from the color that does it best:**
+  - White: any permanent type, with exile. The best removal color.
+  - Blue: counters, bounce, tuck. Bounce buys time like removal. Little hard removal once a permanent resolves.
+  - Black: creatures (destroy, −X/−X, edicts). Weak against enchantments, no answers to artifacts.
+  - Red: small creatures (damage caps out), artifacts, lands. Almost nothing for enchantments.
+  - Green: artifacts, enchantments, lands. Creature removal is fight-based and risky; its creatures defend instead.
+  - Two-color answers in the deck's pair (W/B exile, B/G any permanent) beat generic catch-alls. Catch-alls that hand something back (Beast Within, Chaos Warp, Generous Gift) belong only where the deck's colors lack a better answer for the same job.
+- **Judge each answer on four axes:** efficiency (MV), speed (instant or flash), flexibility (permanent types it hits), impact (several targets, a card back, static upside, exile vs. destroy). The cheap instant staples are narrow, so efficiency and speed beat flexibility. The more the deck draws, the less flexibility matters, because a full hand is flexibility. A pricier or give-back answer needs "a little more" to earn its slot.
+- **Count the exchange in cards and mana.** In a four-player game a 1-for-1 puts both players behind the other two. Answers that hit one thing per opponent, or the engine piece that switches off several other cards, close that gap. A cheap answer to an expensive threat banks mana; paying more than the threat cost loses tempo.
+- **Fit the timing to when the deck is weakest.**
+  - Weak early (control, big ramp, setup-heavy): most answers at MV ≤ 2, castable beside a setup piece, aimed at snowballing engines. Efficiency matters more than instant speed; the deck rarely dies in the first four turns.
+  - Weak late (aggro, the early threat): some high-impact, multi-target or one-sided answers that clear blockers or a lock for the final attack. Sorcery speed is fine here.
+- **Cover the deck's weak points; skip what the plan already handles.** Go-wide and token decks need little combat defense and no anti-Voltron. Voltron needs land answers (Maze of Ith-style) and enchantment answers. Self-mill feeds opponents' graveyards, so run extra graveyard hate. Creature combat wins most casual games (the hosts estimate 70%+), so creature answers are the base. Don't add answers after one loss to a rare strategy (§5 narrow answers).
+- **Prefer on-plan answers:** ETB-removal creatures in blink or recursion decks, removal lands in land decks, instants in spells decks and in any deck that holds mana up for other instants.
+- **Table reputation.** If the pod targets this player early, run more interaction and fewer exposed setup pieces.
 
 ## 2. Curve (V2, DS)
 
@@ -184,6 +205,8 @@ When the helper and the table disagree, quote the table and show the arithmetic.
 - **Resilience** (V3): build the plan around not losing. Layer resilience into the plan's own cards: lifegain, threats on artifacts or enchantments, recursion, land ramp (lands rarely die). A "layer" that needs its own package is a side plan (V1 trap).
 - **Rebuild after a wipe** (V4): a full hand, a ramp lead, recursion and key pieces at MV ≤ 3 let the deck redeploy within a turn or two. Key pieces that aren't creatures dodge most wipes: removal gets scarcer from creature → artifact → enchantment → planeswalker → land, and vehicles or permanents that aren't creatures on opponents' turns dodge creature wipes. Cheap fodder means blocking doesn't cost an engine piece.
 - **Survives losing the commander?** Count how many cards go dead if the commander is answered (V1).
+- **Build for being behind** (V5): at a table of four even decks, any one player is not in the lead about 75% of the time, so "behind" is the normal state. A deck stronger than its pod is behind less often; the pod meta overrides this default. Score borderline cards by how they play from behind. This is about table position, not consistency: a deck can have a high floor and still have nothing to do once someone else is out in front. Rebuild (E21) and the disruption package (§1a) are the main catch-up tools.
+  - *Own extension, not from V5:* sort cards by whether they **make** resources (draw, answers, tokens, recursion, ramp) or **multiply** ones already on the board (anthems, doublers, extra combats). Makers help from any position; multipliers need a board first. A multiplier the plan depends on (a go-wide deck's anthems, which §1 counts as payoffs) stays a payoff. Other multipliers count against the enhancer cap (E4).
 - **Hide the finish** (V4): the table attacks what it can see. A deck whose winning power is mostly in hand (finishers that win the turn they're cast, haste or flash threats, instant-speed or one-shot wincons) looks smaller than it is. A deck that wins from engines already on the board shows its threat a full turn cycle early and gets answered or attacked first. Lots of small pieces that each look harmless also hide power, because opponents misjudge the board.
 - **Instant speed** (V3): prefer modal, instant-speed and activated options so decisions can wait until the end step before your turn.
 - **Clear win check** (V3): goldfish to the target win turn and ask: can I win? Is there a card that would win from here? Is there enough value on board? Is there enough draw to find the wincon? If not, add wincon density or on-plan draw.
@@ -220,6 +243,7 @@ V1's most common mistakes, in order: **#3 trying to do too much**, **#8 enablers
 14. Tuned past the pod's power level. Agree on limits with the pod (bracket, personal rules like no tutors) and raise power slowly. Toning a deck down after overbuilding rarely satisfies anyone, and some commanders can't be toned down at all.
 15. Colored sources short of pips (V3, DS).
 16. No clear way to win (V3).
+17. Removal from the wrong color: generic catch-alls or off-color-weak answers where the deck's colors have a cheaper or cleaner one (V5).
 
 ## 7. Evals (V1 unless tagged)
 
@@ -230,26 +254,30 @@ Pass/fail checks for a finished list or a proposed change set. In a review, run 
 | E1 | Constraints | Budget, Game Changer count, combo rules and bracket all within table rules | same-role swap (§5) |
 | E2 | Plan | Log line names one finisher type; ≤3 steps; step 1 is useful alone | §4 |
 | E3 | One direction | No two payoff groups in contention; no off-plan side packages | §4, trap 3 |
-| E4 | Enablers | Enablers ≥ 25 and > payoffs + enhancers; enhancers ≤ best 4–5 | §4 |
+| E4 | Enablers | Enablers ≥ 25 and > payoffs + enhancers; enhancers plus multipliers that aren't the plan's payoffs ≤ best 4–5 (§4 build for being behind) | §4 |
 | E5 | Non-stacking | Every effect whose second copy is dead has ≤5 copies (≤3 with self-mill + recursion) | §5 |
 | E6 | Draw | Card advantage ≥ 12, with several at MV ≤ 3 | §1, §5 |
 | E7 | Early interaction | Targeted disruption at target, with cheap (MV ≤ 2) answers present | §1 |
 | E8 | Resilience | No single common hate piece (Torpor Orb, Rest in Peace, an edict, Maze of Ith) blanks most of the plan; the answers to it don't share the weakness; most of a hand still works with the commander removed; any card the plan can't run without has a backup in the 99 or protection (V4) | §4, trap 4 |
 | E9 | Ramp fit | Ramp MV lines up with commander MV; every ramp at MV ≥ 4 has a named reason | §5 |
-| E10 | Curve | 6+ at cap (or an oval ramp/cheat deck); 2 is the largest slot; goldfish turns 2–6 spend nearly all available mana | §2 |
+| E10 | Curve | 6+ at cap (or an oval ramp/cheat deck); 2 is the largest slot; across 3+ goldfish games, at most one of turns 2–6 per game leaves 2+ mana unspent. Mana held up counts as spent only up to the cost of instant-speed cards or abilities in hand it could cast (colors included). (Working threshold, not from a source.) | §2 |
 | E11 | Lands | Count ≥ formula result, rounded up; basics cover every fetch effect; sources match pips | §3 |
 | E12 | Narrow answers | Each one is justified by the pod meta or this deck's weak point | §5 |
 | E13 | Recount | After any change set, every role, curve and land count is recounted and still on target | §5 |
 | E14 | Power fit | Expected win turn and bracket match the pod's. Explosive effects (mana doublers, extra turns, cast-for-free engines) are the biggest bracket dial: roughly 2 in bracket 2, 3–5 in bracket 3, ~9 in bracket 4 (V4, one builder's rough guide) | trap 14 |
 | E15 | Commander role | Enabler/payoff/enhancer mix matches the commander's role | §4 |
-| E16 | Vegetables | Ramp, Draw, Targeted and Mass all at target; Mass covers creatures, artifacts/enchantments and the graveyard | §1 |
+| E16 | Vegetables | Ramp, Draw, Targeted and Mass all at target (Targeted and Mass adjusted for deck speed per §1a); Mass covers creatures, artifacts/enchantments and the graveyard | §1, §1a |
 | E17 | Curve fit | 5s are flexible; 6+ permanents are cheated, reduced or reanimated; the commander's MV slot is thin | §2 |
 | E18 | Colored sources | Each color meets §3b (table scaled to the land count, partial credits applied, gold +1) for its most demanding card; untapped sources cover turn-1 plays; utility lands aren't counted as colored | §3b |
 | E19 | Land quality | Tapped lands within budget, each with a named upside; 3+ colors have real fixing | §3a |
 | E20 | Multiplayer scaling | Engine and payoff cards that fire once per four turns (attack-only, your-turn-only) each have a named reason; where a version that scales with 3 opponents fits the same role, it's preferred (V4) | §5 |
 | E21 | Rebuild | Goldfish a wipe at the deck's usual peak: it redeploys a working board within 1–2 turns from hand, recursion or cheap key pieces. Key engine pieces aren't all creatures, or they're protected or recurrable (V4) | §4 |
-| E22 | Multi-role | The commander covers ≥ 2 of card advantage, ramp and payoff, or the 99 does. Most non-land slots fill 2 roles or are the best in their one role (V4) | §5 |
+| E22 | Multi-role | The commander covers ≥ 2 of card advantage, ramp and payoff, or the 99 does. Most non-land slots fill 2 roles or are the best in their one role (V4). Between two otherwise equal cards, the one that makes resources beats the one that only multiplies them (§4 build for being behind) | §5, §4 |
 | E23 | Hidden finish | Most wincons can win from hand the turn they're cast (haste, flash, instant, one-shot finishers) rather than sitting on the board for a turn cycle first. A board-based finish has protection or redundancy (V4) | §4 |
+| E24 | Answer split | Targeted covers creatures, artifacts/enchantments and lands, plus a couple of flexible answers, near §1a's split after shifting for Mass coverage. Each permanent type that stops this deck's plan has at least 2 answers (V5) | §1a |
+| E25 | Color fit | Each answer comes from the deck's best color for that job. Every give-back catch-all has a named reason: no better on-color answer for that job (V5) | §1a, trap 17 |
+| E26 | Answer quality | Each Targeted card is cheap (MV ≤ 2) or has a named extra (instant speed plus a second target, a card back, an on-plan synergy, a static upside). None costs more than the threats it usually answers without such an extra (V5) | §1a |
+| E27 | Timing fit | The disruption profile matches when the deck is weakest: early-weak decks have most answers at MV ≤ 2; late-weak or aggro decks have at least a couple of high-impact or multi-target answers that clear the way to the final attack (V5) | §1a |
 
 **Goldfish symptoms → role** (V1, V3), for `rk-mtg-goldfish` runs or the user's game reports:
 
@@ -268,5 +296,10 @@ Pass/fail checks for a finished list or a proposed change set. In a review, run 
 | One wipe ends the game for this deck | Rebuild (E21) |
 | Engines trigger rarely; deck feels slow at a full table | Multiplayer scaling (E20) |
 | Gets attacked or answered first, the turn before it would win | Hidden finish (E23) |
+| An opponent's engine snowballs before this deck sets up | Timing fit (E27), early interaction (E7) |
+| Removal sits in hand because casting it costs the whole turn | Answer quality (E26), timing fit (E27) |
+| A permanent type sticks and nothing in the deck answers it | Answer split (E24), color fit (E25) |
+| Blockers or a lock stop the final attack | Timing fit (E27) |
+| Falls behind early and never catches up | Draw (E6), timing fit (E27), rebuild (E21), multipliers over the cap (E4) |
 
 Goldfish before buying cards. Goldfishing also shows which opening hands to keep: mulligan hands with no draw (V1).
