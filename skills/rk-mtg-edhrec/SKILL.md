@@ -20,6 +20,7 @@ This skill returns inclusion and commander-specific synergy. Oracle text and leg
 
 ## Pick the page
 
+- Named commander, ranked adds for a deck: `candidates`, with the deck's themes and `--exclude` set to the list
 - Named commander, staples or synergy: `commander`
 - Named commander, advertised theme slugs from the page's tag list: `themes`
 - Named commander, theme or budget subpage: `commander --theme SLUG` or `--budget`
@@ -27,6 +28,7 @@ This skill returns inclusion and commander-specific synergy. Oracle text and leg
 - Named commander, typical list: `average-deck`
 
 ```bash
+python scripts/edhrec.py candidates 'COMMANDER NAME' --theme blink --theme control --exclude deck.txt
 python scripts/edhrec.py commander 'COMMANDER NAME'
 python scripts/edhrec.py themes 'COMMANDER NAME'
 python scripts/edhrec.py commander 'COMMANDER NAME' --theme tokens
@@ -35,7 +37,9 @@ python scripts/edhrec.py card 'CARD NAME'
 python scripts/edhrec.py average-deck 'COMMANDER NAME'
 ```
 
-`--max` defaults to 10 cards per list. `--list HEADER` keeps matching list titles. Repeatable. `--fresh` skips the 24h cache.
+`--max` defaults to 10 cards per list. `--list HEADER` keeps matching list titles. Repeatable. `--fresh` skips the 24h cache. `--exclude FILE` (`commander`, `card`, `candidates`; `-` for stdin) drops cards already in that decklist and reports how many were dropped.
+
+`candidates` merges the base commander page with every `--theme` page (and the budget page with `--budget`) into one deduped list, 40 cards by default. Each card has its best `synergy`, `lift`, and `trend_zscore`, its `inclusion` on each page, `sources` (page and list), and `category` (its type list). `--sort synergy|inclusion|lift|trend` picks the order, and cards on more pages win ties. `--min-synergy X` drops weak fits. Land lists are left out unless you pass `--lands`, because the mana base is built separately.
 
 No fuzzy slugs. Missing pages often return HTTP 403 from the CDN, not 404. Resolve the Oracle name with the `rk-mtg-scryfall` skill, then retry. Check the returned `name`.
 
@@ -64,7 +68,11 @@ Cache under `~/.cache/edhrec/{kind}/{slug}.json` for 24 hours. Inclusion and pri
 ## How to read the numbers
 
 - `synergy` is commander-specific lift, not quality. High synergy means the card shows up here more than its baseline. A generic staple can have high inclusion and low synergy.
-- `num_decks` / `potential_decks` is inclusion in that commander's sample.
+- `inclusion` is `num_decks` / `potential_decks`: the share of that commander's (or theme's) decks that play the card.
+- `lift` is how many times more often the card shows up here than in other decks that could play it. It is the same idea as synergy, expressed as a ratio.
+- `trend_zscore` above about 2 means the card is rising right now, often because it is new. Check that it is not just hype.
+- Synergy or lift measures fit with the commander, and inclusion measures consensus. A card high on both is the safest add. High synergy with low inclusion is a niche pick worth reading. High inclusion with low synergy is a generic staple, so compare it with the slot's role.
+- `similar` lists commanders whose decks look like this one's. Their `candidates` pages are a second pool when this commander's sample is small.
 - Scryfall `edhrec_rank` is sitewide popularity. Use this skill when the question is "in this commander's decks."
 
 If `cardlists` is missing, treat lists as empty. Do not guess staples from memory.

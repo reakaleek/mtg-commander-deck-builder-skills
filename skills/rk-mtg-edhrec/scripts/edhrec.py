@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""EDHREC helper: commander, card, and average-deck pages."""
+"""EDHREC helper: commander, card, average-deck pages, and merged candidates."""
 
 from __future__ import annotations
 
@@ -20,10 +20,19 @@ MIN_INTERVAL_SEC = 0.55
 CACHE_TTL_SEC = 24 * 60 * 60
 DEFAULT_CACHE = Path.home() / ".cache" / "edhrec"
 DEFAULT_MAX = 10
+DEFAULT_CANDIDATES_MAX = 40
 KIND_PATH = {
     "commander": "commanders",
     "card": "cards",
     "average-deck": "average-decks",
+}
+# Cross-type lists; a card's category comes from its type list instead.
+META_LISTS = {
+    "New Cards",
+    "Top Cards",
+    "High Synergy Cards",
+    "High Lift Cards",
+    "Game Changers",
 }
 TYPE_COUNT_KEYS = (
     "creature",
@@ -151,11 +160,36 @@ def json_dict(page: dict[str, Any]) -> dict[str, Any]:
     return {}
 
 
+def name_key(name: Any) -> str:
+    return str(name or "").split("//", 1)[0].strip().lower()
+
+
+def read_deck_names(path: str) -> set[str]:
+    """Card names from `qty name` lines; headers, comments, and blanks are skipped."""
+    text = sys.stdin.read() if path == "-" else Path(path).expanduser().read_text(encoding="utf-8")
+    names: set[str] = set()
+    for raw in text.splitlines():
+        line = raw.strip()
+        if not line or line.startswith(("#", "//")):
+            continue
+        m = re.match(r"^(\d+)\s*x?\s+(.+)$", line, re.IGNORECASE)
+        if not m:
+            continue
+        # Drop Archidekt extras: "(set) 123 *F* [Category] ^Label^".
+        name = re.split(r"\s+\(|\s+\[|\s+\^|\s+\*", m.group(2), maxsplit=1)[0]
+        names.add(name_key(name))
+    return names
+
+
 def slim_cardview(view: dict[str, Any]) -> dict[str, Any]:
     out: dict[str, Any] = {"name": view.get("name")}
-    for key in ("synergy", "num_decks", "potential_decks"):
+    for key in ("synergy", "lift", "trend_zscore", "num_decks", "potential_decks"):
         if key in view:
-            out[key] = view[key]
+            value = view[key]
+            out[key] = round(value, 3) if isinstance(value, float) else value
+    decks, potential = view.get("num_decks"), view.get("potential_decks")
+    if isinstance(decks, (int, float)) and isinstance(potential, (int, float)) and potential:
+        out["inclusion"] = round(decks / potential, 3)
     return out
 
 
@@ -163,9 +197,12 @@ def slim_lists(
     page: dict[str, Any],
     max_cards: int,
     list_filters: list[str],
-) -> list[dict[str, Any]]:
+    exclude: set[str] | None = None,
+) -> tuple[list[dict[str, Any]], int]:
     raw_lists = json_dict(page).get("cardlists") or []
     filters = [f.lower() for f in list_filters]
+    exclude = exclude or set()
+    excluded: set[str] = set()
     out: list[dict[str, Any]] = []
     for cl in raw_lists:
         if not isinstance(cl, dict):
@@ -173,10 +210,17 @@ def slim_lists(
         header = cl.get("header") or cl.get("tag") or ""
         if filters and not any(f in str(header).lower() for f in filters):
             continue
-        views = cl.get("cardviews") or []
-        cards = [slim_cardview(v) for v in views[:max_cards] if isinstance(v, dict)]
+        cards: list[dict[str, Any]] = []
+        for v in cl.get("cardviews") or []:
+            if not isinstance(v, dict):
+                continue
+            if name_key(v.get("name")) in exclude:
+                excluded.add(name_key(v.get("name")))
+                continue
+            if len(cards) < max_cards:
+                cards.append(slim_cardview(v))
         out.append({"header": header, "cards": cards})
-    return out
+    return out, len(excluded)
 
 
 def flatten_deck(deck: Any) -> dict[str, int]:
@@ -229,6 +273,8 @@ def cmd_lists(args: argparse.Namespace, kind: str) -> int:
                 return 1
     page, cached = fetch_page(kind, slug, Path(args.cache_dir).expanduser(), args.fresh, suffix)
     card = json_dict(page).get("card") or {}
+    exclude = read_deck_names(args.exclude) if args.exclude else set()
+    lists, excluded = slim_lists(page, args.max, args.list, exclude)
     payload = {
         "kind": kind,
         "name": card.get("name") or page.get("header") or args.name,
@@ -238,8 +284,106 @@ def cmd_lists(args: argparse.Namespace, kind: str) -> int:
         "num_decks": card.get("num_decks"),
         "rank": card.get("rank"),
         "salt": card.get("salt"),
-        "lists": slim_lists(page, args.max, args.list),
     }
+    if kind == "commander":
+        payload["similar"] = similar_commanders(page)
+    if args.exclude:
+        payload["excluded"] = excluded
+    payload["lists"] = lists
+    json.dump(payload, sys.stdout, indent=2, ensure_ascii=False)
+    sys.stdout.write("\n")
+    return 0
+
+
+def similar_commanders(page: dict[str, Any]) -> list[str]:
+    out: list[str] = []
+    for item in page.get("similar") or []:
+        name = item.get("name") if isinstance(item, dict) else item
+        if isinstance(name, str):
+            out.append(name)
+    return out
+
+
+def cmd_candidates(args: argparse.Namespace) -> int:
+    slug = slugify(args.name)
+    if not slug:
+        print("Empty card name", file=sys.stderr)
+        return 1
+    suffixes: list[str | None] = [None]
+    for theme in args.theme:
+        suffix = slugify(theme)
+        if not suffix:
+            print("Empty theme slug", file=sys.stderr)
+            return 1
+        suffixes.append(suffix)
+    if args.budget:
+        suffixes.append("budget")
+
+    cache_dir = Path(args.cache_dir).expanduser()
+    exclude = read_deck_names(args.exclude) if args.exclude else set()
+    excluded: set[str] = set()
+    merged: dict[str, dict[str, Any]] = {}
+    pages: list[dict[str, Any]] = []
+    name = args.name
+    similar: list[str] = []
+    for suffix in suffixes:
+        page, cached = fetch_page("commander", slug, cache_dir, args.fresh, suffix)
+        page_name = suffix or "base"
+        pages.append({"page": page_name, "cached": cached})
+        if suffix is None:
+            name = (json_dict(page).get("card") or {}).get("name") or name
+            similar = similar_commanders(page)
+        for cl in json_dict(page).get("cardlists") or []:
+            if not isinstance(cl, dict):
+                continue
+            header = str(cl.get("header") or cl.get("tag") or "")
+            if "land" in header.lower() and not args.lands:
+                continue
+            for view in cl.get("cardviews") or []:
+                if not isinstance(view, dict) or not view.get("name"):
+                    continue
+                key = name_key(view["name"])
+                if key in exclude:
+                    excluded.add(key)
+                    continue
+                slim = slim_cardview(view)
+                entry = merged.setdefault(key, {"name": view["name"], "inclusion": {}, "sources": []})
+                if header not in META_LISTS and "category" not in entry:
+                    entry["category"] = header
+                for stat in ("synergy", "lift", "trend_zscore"):
+                    if stat in slim and (stat not in entry or slim[stat] > entry[stat]):
+                        entry[stat] = slim[stat]
+                if "inclusion" in slim:
+                    entry["inclusion"][page_name] = slim["inclusion"]
+                entry["sources"].append(f"{page_name}: {header}")
+
+    sort_key = {"synergy": "synergy", "lift": "lift", "trend": "trend_zscore"}.get(args.sort)
+
+    def rank(entry: dict[str, Any]) -> tuple[float, int]:
+        if sort_key:
+            value = entry.get(sort_key)
+        else:
+            value = max(entry["inclusion"].values(), default=None)
+        pages_hit = len({s.split(":", 1)[0] for s in entry["sources"]})
+        return (value if isinstance(value, (int, float)) else float("-inf"), pages_hit)
+
+    cards = list(merged.values())
+    if args.min_synergy is not None:
+        cards = [c for c in cards if isinstance(c.get("synergy"), (int, float)) and c["synergy"] >= args.min_synergy]
+    cards.sort(key=rank, reverse=True)
+    payload: dict[str, Any] = {
+        "kind": "candidates",
+        "name": name,
+        "slug": slug,
+        "pages": pages,
+        "sort": args.sort,
+        "similar": similar,
+        "total": len(cards),
+        "returned": min(len(cards), args.max),
+    }
+    if args.exclude:
+        payload["excluded"] = len(excluded)
+    payload["cards"] = cards[: args.max]
     json.dump(payload, sys.stdout, indent=2, ensure_ascii=False)
     sys.stdout.write("\n")
     return 0
@@ -316,6 +460,14 @@ def add_shared_flags(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--cache-dir", default=str(DEFAULT_CACHE))
 
 
+def add_exclude_flag(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument(
+        "--exclude",
+        default=None,
+        help="Decklist file (or -) whose cards are dropped from the output",
+    )
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     sub = parser.add_subparsers(dest="command", required=True)
@@ -324,7 +476,34 @@ def build_parser() -> argparse.ArgumentParser:
     add_shared_flags(commander)
     commander.add_argument("--theme", default=None, help="Theme subpage slug")
     commander.add_argument("--budget", action="store_true", help="Budget subpage")
+    add_exclude_flag(commander)
     commander.set_defaults(func=lambda a: cmd_lists(a, "commander"))
+
+    candidates = sub.add_parser(
+        "candidates",
+        help="Merge the commander page and theme subpages into one ranked list",
+    )
+    candidates.add_argument("name", help="Exact Oracle commander name")
+    candidates.add_argument(
+        "--theme",
+        action="append",
+        default=[],
+        help="Theme subpage slug to merge in (repeatable)",
+    )
+    candidates.add_argument("--budget", action="store_true", help="Also merge the budget subpage")
+    candidates.add_argument(
+        "--sort",
+        choices=("inclusion", "synergy", "lift", "trend"),
+        default="synergy",
+        help="inclusion uses the best page; ties go to cards on more pages",
+    )
+    candidates.add_argument("--min-synergy", type=float, default=None)
+    candidates.add_argument("--lands", action="store_true", help="Keep land lists")
+    candidates.add_argument("--max", type=int, default=DEFAULT_CANDIDATES_MAX, dest="max")
+    add_exclude_flag(candidates)
+    candidates.add_argument("--fresh", action="store_true", help="Bypass the 24h cache")
+    candidates.add_argument("--cache-dir", default=str(DEFAULT_CACHE))
+    candidates.set_defaults(func=cmd_candidates)
 
     themes = sub.add_parser("themes", help="List theme slugs advertised on a commander page")
     add_shared_flags(themes)
@@ -332,6 +511,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     card = sub.add_parser("card", help="GET /pages/cards/{slug}.json")
     add_shared_flags(card)
+    add_exclude_flag(card)
     card.set_defaults(func=lambda a: cmd_lists(a, "card"))
 
     average = sub.add_parser("average-deck", help="GET /pages/average-decks/{slug}.json")

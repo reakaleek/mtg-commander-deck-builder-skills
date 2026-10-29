@@ -428,6 +428,10 @@ def allows_any_number(card: dict[str, Any]) -> bool:
     return bool(ANY_NUMBER_RE.search(text))
 
 
+def name_key(name: Any) -> str:
+    return str(name or "").split("//", 1)[0].strip().lower()
+
+
 def identity_set(card: dict[str, Any]) -> set[str]:
     return {c for c in (card.get("color_identity") or []) if isinstance(c, str)}
 
@@ -631,16 +635,50 @@ def cmd_tags(args: argparse.Namespace) -> int:
     return 0
 
 
+DISPLAY_OPTION = re.compile(
+    r"(?<![\w-])(?:order|direction|dir|unique|prefer|cheapest|include|display):\S+",
+    re.IGNORECASE,
+)
+
+
+def deck_frame(commanders: list[str], query: str) -> tuple[str, list[str]]:
+    """Prefix the query with the commanders' identity and Commander legality."""
+    identity: set[str] = set()
+    names: list[str] = []
+    for name in commanders:
+        card = http_json("GET", f"{API}/cards/named?{urllib.parse.urlencode({'exact': name})}")
+        identity |= identity_set(card)
+        names.append(card.get("name") or name)
+    letters = "".join(c for c in "WUBRG" if c in identity).lower() or "c"
+    # Display options are refused inside parentheses, so keep them outside.
+    options = DISPLAY_OPTION.findall(query)
+    filters = DISPLAY_OPTION.sub("", query).strip()
+    framed = f"id<={letters} f:commander game:paper"
+    if filters:
+        framed += f" ({filters})"
+    if options:
+        framed += " " + " ".join(options)
+    return framed, names
+
+
 def cmd_search(args: argparse.Namespace) -> int:
-    params = {"q": args.query, "unique": args.unique}
+    query = args.query
+    skip: set[str] = set()
+    if args.commander:
+        query, commanders = deck_frame(args.commander, query)
+        skip |= {name_key(n) for n in commanders}
+    if args.exclude:
+        skip |= {name_key(n) for n in parse_names(read_text(args.exclude))}
+    params = {"q": query, "unique": args.unique}
     if args.order:
         params["order"] = args.order
     url = f"{API}/cards/search?{urllib.parse.urlencode(params)}"
     fields = parse_fields(args.fields)
     cards: list[dict[str, Any]] = []
+    excluded = 0
     total: int | None = None
     try:
-        bad_tags = unknown_tags(args.query, Path(args.cache_dir).expanduser())
+        bad_tags = unknown_tags(query, Path(args.cache_dir).expanduser())
     except RuntimeError as e:
         bad_tags = []
         print(f"warning: could not check tag names: {e}", file=sys.stderr)
@@ -656,24 +694,25 @@ def cmd_search(args: argparse.Namespace) -> int:
         total = result.get("total_cards", total)
         batch = result.get("data") or []
         for card in batch:
+            if skip and name_key(card.get("name")) in skip:
+                excluded += 1
+                continue
             cards.append(project_fields(card, fields) if fields else card)
             if len(cards) >= args.max:
                 break
         url = result.get("next_page") if result.get("has_more") and len(cards) < args.max else None
 
-    json.dump(
-        {
-            "query": args.query,
-            "unique": args.unique,
-            "total_cards": total,
-            "returned": len(cards),
-            "unknown_tags": bad_tags,
-            "cards": cards,
-        },
-        sys.stdout,
-        indent=2,
-        ensure_ascii=False,
-    )
+    payload: dict[str, Any] = {
+        "query": query,
+        "unique": args.unique,
+        "total_cards": total,
+        "returned": len(cards),
+        "unknown_tags": bad_tags,
+    }
+    if skip:
+        payload["excluded"] = excluded
+    payload["cards"] = cards
+    json.dump(payload, sys.stdout, indent=2, ensure_ascii=False)
     sys.stdout.write("\n")
     return 0
 
@@ -1486,6 +1525,13 @@ def build_parser() -> argparse.ArgumentParser:
     search.add_argument("--order", default=None)
     search.add_argument("--max", type=int, default=DEFAULT_SEARCH_MAX, dest="max")
     search.add_argument("--fields", default=DEFAULT_FIELDS)
+    search.add_argument(
+        "--commander",
+        action="append",
+        default=[],
+        help="Prefix id<=<identity> f:commander game:paper (repeat for partners)",
+    )
+    search.add_argument("--exclude", default=None, help="Decklist file (or -) to drop from results")
     search.add_argument("--cache-dir", default=str(DEFAULT_CACHE))
     search.set_defaults(func=cmd_search)
 

@@ -36,7 +36,7 @@ Nothing pod-specific is hard-coded here.
 | Curve, pips, sources, GC list | `rk-mtg-scryfall` | `deck-stats <file>` |
 | Prices | `rk-mtg-scryfall` | `prices <file> --currency <cur>` |
 | Legality / GC count / singleton | `rk-mtg-scryfall` | `validate-deck <file> --final --resolve` |
-| Candidates | `rk-mtg-edhrec`, `rk-mtg-scryfall` | `commander`, `themes`, `commander --theme`; role and theme searches per scryfall's finding-cards guide |
+| Candidates | `rk-mtg-edhrec`, `rk-mtg-scryfall` | `themes`, then `candidates <cmdr> --theme <slug> --exclude <file>`; `search --commander <cmdr> --exclude <file>` per scryfall's finding-cards guide, including its fit check |
 | Combos / bracket estimate | `rk-mtg-spellbook` | `combos` / `bracket <file> --commander <name>` |
 | Hand / screw-flood sanity (optional) | `rk-mtg-goldfish` | `stats <file> --types <json>` |
 
