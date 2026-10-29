@@ -36,6 +36,7 @@ Never call `/cards/named` once per decklist line. Never paginate a search just t
 
 ```bash
 python scripts/scryfall.py search 'QUERY'
+python scripts/scryfall.py search 'otag:sweeper order:edhrec' --commander 'COMMANDER NAME' --exclude deck.txt
 python scripts/scryfall.py tags draw
 python scripts/scryfall.py tags '/^removal-/' --kind oracle
 python scripts/scryfall.py named 'CARD NAME'
@@ -54,6 +55,8 @@ python scripts/scryfall.py bulk oracle_cards
 `parse-deck` and `collection` accept a file path or `-` for stdin. `prices` uses `--currency usd|eur|tix`. `write-deck` reads stdin unless you pass `--file-in`. `--force` overwrites a non-deck file.
 
 `search` defaults to `--max 40` and slim `--fields`. Raise `--max` only if you need more. Use `--unique prints` only when printings, prices, or art matter. No matches returns `total_cards: 0`, not an error.
+
+For deck candidates, pass `--commander NAME` (repeat it for partners). That prefixes `id<=<identity> f:commander game:paper`, wraps the rest of the query in parentheses, and leaves display options like `order:` outside them. Output `query` echoes the final string. `--exclude FILE` (`-` for stdin) drops cards already in the decklist, plus the commander, and keeps paging until `--max` new cards are found. `excluded` says how many were dropped.
 
 Every search reports `unknown_tags`: tag terms Scryfall does not recognize. A misspelled tag matches nothing on its own and silently changes results inside `or` or `-`, so fix any listed tag before trusting the output. `tags PATTERN` greps the Tagger tag list (substring, or `/regex/`; `--kind art` for illustration tags). The list comes from Scryfall's tag docs page and is cached for a week under `~/.cache/scryfall/`. Aliases that the page does not list are confirmed with one search and remembered.
 

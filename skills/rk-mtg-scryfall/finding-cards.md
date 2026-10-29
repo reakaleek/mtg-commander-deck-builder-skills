@@ -2,13 +2,21 @@
 
 A search method for "what should go in this slot". It returns candidates; the caller judges them. Syntax details: [syntax.md](syntax.md).
 
+## 0. Order of sources
+
+1. **EDHREC first** for picks that players agree fit the commander: `rk-mtg-edhrec candidates <commander> --theme <the deck's themes> --exclude <deck file>`.
+2. **Scryfall next** for what EDHREC under-samples: underplayed fits, new cards, and budget picks. Use the searches below.
+3. **Then widen**, if the pool is thin: EDHREC `card` on the deck's key engine piece, or `candidates` for the commanders in `similar`.
+
 ## 1. Lock the frame first
 
-Start every candidate search with the deck's hard filters, so nothing illegal or off-budget shows up:
+Start every candidate search with the deck's hard filters, so nothing illegal, off-budget, or already in the deck shows up:
 
 ```
-id<=<commander colors> f:commander game:paper -t:land
+search '-t:land <role or theme terms>' --commander '<Commander>' --exclude <deck file>
 ```
+
+`--commander` adds `id<=<identity> f:commander game:paper`, and `--exclude` drops the deck's current cards. Without the helper, write the frame by hand: `id<=<commander colors> f:commander game:paper -t:land`.
 
 Add as the table requires: `-is:gamechanger` once the Game Changer cap is used, `eur<N` / `usd<N` for a per-card ceiling (any printing counts, see syntax.md), `-is:reserved` when reprint risk matters.
 
@@ -52,5 +60,17 @@ Use `fo:` when the mechanic lives in reminder text, and regex when the wording v
 - **For recall, union tag and text:** `(otag:sweeper or o:"destroy all")`.
 - **Check `unknown_tags` is empty.** A misspelled tag returns nothing on its own, and inside `or` or `-` it silently changes the results.
 - **Check the deck still passes.** Run `validate-deck --resolve` for legality, identity and Game Changers, and `prices` for the real cheapest-print cost.
+
+## 5. Fit check
+
+A candidate that matches the search does not yet fit the deck. Before proposing it, write one line for each check:
+
+- **Job:** the plan step it advances or the failed eval it fixes. "Good card" is not a job.
+- **Curve:** its mana value fills a gap in `deck-stats`, or at least does not add to the biggest bulge.
+- **Roles:** it fills two roles, or the line says why one is enough here.
+- **Price:** it fits the budget left for this slot, priced the cheapest way.
+- **Swap:** in this deck, judged on Oracle text and not on tags, it does more than the card it replaces.
+
+Drop candidates that fail a check. Show the user the best 3–5 per slot, not the whole list.
 
 Sources: Scryfall syntax, regex and Tagger tag docs; Doug Young, "The Ultimate Scryfall Primer" (Commander's Herald, 2024); Cooper Gottfried, "Guide to Scryfall Syntax" (EDHREC); Sheldon Menery, "Finding Priceless Treasures in Commander" (Star City Games, 2015).
