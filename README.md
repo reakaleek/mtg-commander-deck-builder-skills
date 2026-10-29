@@ -27,6 +27,8 @@ Before anything else it establishes the table rules: bracket, Game Changer limit
 
 **Review / cuts.** Bring an Archidekt URL or a local file. It tags every card by role, compares counts, curve, and lands against the skeleton, and names the three to five biggest problems. It proposes same-role swaps, then recounts everything as it would look after the changes.
 
+**Deep review.** Ask for a deep or thorough review to fan the same review out to four parallel subagents, each with one profile: mana and curve, vegetables and interaction, plan and synergy, and an "opponent at the table" that plays aggro, control and combo archetypes against the list. Each lens owns its own evals, the merged swap set is then checked by a verifier that recounts from scratch, and conflicts between lenses are shown to you. It costs several times a normal review, so it only runs when you ask.
+
 **Playtest loop.** Tell it how a game felt, in your own words. It appends a dated entry to `~/mtg/<deck>.log.md`, reads the whole log, and only acts on patterns across games. It asks one to three follow-up questions if the report is vague, and records the swaps you accept on that entry.
 
 ### Pilot a finished deck

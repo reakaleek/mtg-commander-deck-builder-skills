@@ -1,6 +1,6 @@
 ---
 name: mtg-deckbuilder
-description: "Build, review/cut, and playtest-tune Commander (EDH) decks by role counts, curve, and a land formula. Use when the user wants to build a new EDH deck, review or trim an existing list (Archidekt URL or ~/mtg/<deck>.txt), pick cuts or swaps, or report how games with a deck went."
+description: "Build, review/cut, and playtest-tune Commander (EDH) decks by role counts, curve, and a land formula. Use when the user wants to build a new EDH deck, review or trim an existing list (Archidekt URL or ~/mtg/<deck>.txt), run a deep multi-lens review, pick cuts or swaps, or report how games with a deck went."
 ---
 
 # MTG Deckbuilder
@@ -39,6 +39,7 @@ Nothing pod-specific is hard-coded here.
 | Candidates | `rk-mtg-edhrec`, `rk-mtg-scryfall` | `themes`, then `candidates <cmdr> --theme <slug> --exclude <file>`; `search --commander <cmdr> --exclude <file>` per scryfall's finding-cards guide, including its fit check |
 | Combos / bracket estimate | `rk-mtg-spellbook` | `combos` / `bracket <file> --commander <name>` |
 | Hand / screw-flood sanity (optional) | `rk-mtg-goldfish` | `stats <file> --types <json>` |
+| Role counts, curve, land-formula inputs, recount after swaps | this skill | `scripts/role_counts.py <tags.md> --commander <name> [--cut … --add …]` |
 
 Plain `.txt` lists don't mark the commander, so always pass the commander name. If a helper is unavailable, say so and continue: tag from oracle text you can still get, ask the user for prices, or skip the optional checks and note what wasn't verified.
 
@@ -57,11 +58,15 @@ Plain `.txt` lists don't mark the commander, so always pass the commander name. 
 
 1. Load the deck (Archidekt URL → `fetch --out`, or `~/mtg/<deck>.txt`). Read `~/mtg/<deck>.log.md` if it exists, plus memory notes for this deck.
 2. Run `deck-stats` and `prices`. Check budget and GC count first; constraint violations are problems before anything else.
-3. **Tag every card** (§1 tags, with secondaries) from oracle text. Show the tag table compactly.
+3. **Tag every card** (§1 tags, with secondaries) from oracle text, one row per card in a table with `Qty | Card | Primary | Secondaries | MV | Hits` columns (Hits: what a Targeted card answers). Get every count from `scripts/role_counts.py`, never by hand. Show the tag table compactly.
 4. **Run the evals** (§7): every row, pass/fail, with the number behind each failure. They cover the §1–3 targets and the §6 traps.
 5. **Name the 3–5 biggest problems**, most impactful first; break ties with §6's most-common order. Each one needs a number (e.g. "Draw 7 vs ≥12") or a failed eval/trap.
 6. **Propose same-role swaps** (§5) that fix those problems: cut → add, role, reason, price delta. Prefer cuts from over-target roles, and adds that fill two roles.
-7. **Recount after the proposed changes** (eval E13): show before → after for each role, the curve, the land formula and the total price, and re-run any eval that failed. Then stop and wait for the user's OK.
+7. **Recount after the proposed changes** (eval E13): show before → after for each role, the curve, the land formula and the total price, and re-run any eval that failed. Take the numbers from `role_counts.py` with `--cut`/`--add`. Then stop and wait for the user's OK.
+
+## B+. DEEP REVIEW (opt-in)
+
+When the user asks for a deep, thorough or full review, follow [deep-review.md](deep-review.md) instead of B.4–B.7: four parallel lens subagents (mana & curve, vegetables & interaction, plan & synergy, opponent at the table) split the evals, then a verifier checks the merged swaps. It costs several times a normal review, so don't start it unasked. The ground rules above still apply.
 
 ## C. PLAYTEST LOOP
 

@@ -467,7 +467,8 @@ def mana_cost_of(card: dict[str, Any]) -> str | None:
 
 
 def is_land(card: dict[str, Any]) -> bool:
-    return "Land" in (card.get("type_line") or "")
+    # Front face only: a spell // land MDFC is a spell, a land // creature DFC is a land.
+    return "Land" in (card.get("type_line") or "").split("//", 1)[0]
 
 
 def enters_tapped(card: dict[str, Any]) -> bool:
@@ -758,11 +759,11 @@ def cmd_collection(args: argparse.Namespace) -> int:
                 unresolved.append(n)
         still_missing = unresolved
 
-    by_name = {c["name"]: c for c in cards if c.get("name")}
+    by_name = {name_key(c["name"]): c for c in cards if c.get("name")}
     fields = parse_fields(args.fields)
     ordered: list[dict[str, Any]] = []
     for n in names:
-        card = by_name.get(n) or aliases.get(n)
+        card = by_name.get(name_key(n)) or aliases.get(n)
         if card:
             ordered.append(project_fields(card, fields) if fields else card)
 
@@ -843,7 +844,7 @@ def search_cheapest(names: list[str], currency: str) -> dict[str, dict[str, Any]
     for card in result.get("data") or []:
         name = card.get("name")
         if name:
-            found[name] = card
+            found[name_key(name)] = card
     return found
 
 
@@ -940,7 +941,7 @@ def cmd_prices(args: argparse.Namespace) -> int:
     for name, qty in qty_by_name.items():
         if name in already:
             continue
-        card = cheapest_map.get(name)
+        card = cheapest_map.get(name_key(name))
         unit = price_value(card, currency) if card else None
         printing = None
         if card:
@@ -1045,19 +1046,19 @@ def cmd_validate_deck(args: argparse.Namespace) -> int:
         if unresolved:
             errors.append(f"unresolved names: {', '.join(unresolved)}")
 
-        by_name = {c["name"]: c for c in fetched if c.get("name")}
+        by_name = {name_key(c["name"]): c for c in fetched if c.get("name")}
         qty_by_name: dict[str, int] = {}
         for row in in_deck:
             qty_by_name[row["name"]] = qty_by_name.get(row["name"], 0) + int(row["qty"])
 
         command_identity: set[str] = set()
         for row in command:
-            card = by_name.get(row["name"])
+            card = by_name.get(name_key(row["name"]))
             if card:
                 command_identity |= identity_set(card)
 
         for name, qty in qty_by_name.items():
-            card = by_name.get(name)
+            card = by_name.get(name_key(name))
             if not card:
                 continue
             if qty > 1 and not is_basic(card) and not allows_any_number(card):
@@ -1114,7 +1115,7 @@ def cmd_deck_stats(args: argparse.Namespace) -> int:
 
     names = unique_deck_names(in_deck)
     fetched, unresolved = fetch_named_cards(names)
-    by_name = {c["name"]: c for c in fetched if c.get("name")}
+    by_name = {name_key(c["name"]): c for c in fetched if c.get("name")}
 
     histogram = {str(n): 0 for n in range(0, 7)}
     histogram["7+"] = 0
@@ -1124,6 +1125,7 @@ def cmd_deck_stats(args: argparse.Namespace) -> int:
     types: dict[str, int] = {}
     game_changers: list[str] = []
     tapped_lands: list[str] = []
+    mdfc_lands: list[dict[str, Any]] = []
     early_plays = 0
     nonland_spells = 0
     lands = 0
@@ -1132,7 +1134,7 @@ def cmd_deck_stats(args: argparse.Namespace) -> int:
 
     for row in in_deck:
         qty = int(row["qty"])
-        card = by_name.get(row["name"])
+        card = by_name.get(name_key(row["name"]))
         if not card:
             continue
         types[primary_type(card)] = types.get(primary_type(card), 0) + qty
@@ -1152,6 +1154,8 @@ def cmd_deck_stats(args: argparse.Namespace) -> int:
             mv = int(float(cmc))
         except (TypeError, ValueError):
             mv = 0
+        if "Land" in (card.get("type_line") or "").partition("//")[2]:
+            mdfc_lands.append({"name": row["name"], "qty": qty, "mv": mv, "rarity": card.get("rarity")})
         mv_total += mv * qty
         if 1 <= mv <= 2:
             early_plays += qty
@@ -1190,6 +1194,7 @@ def cmd_deck_stats(args: argparse.Namespace) -> int:
         "early_plays_mv_1_2": early_plays,
         "nonland_spells": nonland_spells,
         "lands": lands,
+        "spell_land_mdfcs": mdfc_lands,
         "avg_mana_value_nonland": round(mv_total / nonland_spells, 2) if nonland_spells else 0,
         "tipping_point": tipping,
         "playability": playable,
@@ -1381,7 +1386,7 @@ def market_index(
     popularity_only: list[str] = []
     worst_rank = MARKET_POP_CURVE[-1]
     for row in in_deck:
-        card = by_name.get(row["name"])
+        card = by_name.get(name_key(row["name"]))
         if not card:
             continue
         qty = int(row["qty"])
