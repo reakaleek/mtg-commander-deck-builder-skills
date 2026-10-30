@@ -17,7 +17,7 @@ REQUIRED = {
     "rk-mtg-archidekt": ("SKILL.md", "scripts/archidekt.py"),
     "rk-mtg-goldfish": ("SKILL.md", "scripts/goldfish.py"),
     "rk-mtg-spellbook": ("SKILL.md", "scripts/spellbook.py"),
-    "mtg-deckbuilder": ("SKILL.md", "principles.md", "deep-review.md", "scripts/role_counts.py"),
+    "mtg-deckbuilder": ("SKILL.md", "principles.md", "deep-review.md", "archetypes.md", "scripts/role_counts.py"),
 }
 
 DECKBUILDER_MAX_SKILL_LINES = 150
@@ -143,10 +143,10 @@ def main() -> int:
         extra = sorted(
             p.name
             for p in deckbuilder.iterdir()
-            if p.name not in {"SKILL.md", "principles.md", "deep-review.md", "scripts"}
+            if p.name not in {"SKILL.md", "principles.md", "deep-review.md", "archetypes.md", "scripts"}
         )
         if extra:
-            fail(errors, f"mtg-deckbuilder allows only SKILL.md, principles.md, deep-review.md and scripts/, found {extra}")
+            fail(errors, f"mtg-deckbuilder allows only SKILL.md, principles.md, deep-review.md, archetypes.md and scripts/, found {extra}")
         skill = deckbuilder / "SKILL.md"
         if skill.is_file():
             text = skill.read_text(encoding="utf-8")

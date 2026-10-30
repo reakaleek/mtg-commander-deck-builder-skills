@@ -1,6 +1,6 @@
 # Deckbuilding principles
 
-The single source of truth for every number the skill uses. SKILL.md never repeats these.
+The single source of truth for every number the skill uses, except archetype-specific ones, which live in [archetypes.md](archetypes.md). SKILL.md never repeats these.
 
 Sources: **V1** Command Zone #767 "Stop Falling for these Commander Deckbuilding Traps" ·
 **V2** Command Zone #658 "Commander Deckbuilding Template for the New Era" ·
@@ -201,7 +201,7 @@ When the helper and the table disagree, quote the table and show the arithmetic.
 - Step 1 gets the most support because it is needed on turns 2–3. Payoffs are steps 2–3, needed around turns 4–5, so fewer copies suffice (V1). About 80–85% of the deck should serve the steps (V1).
 - **One direction.** Card slots are limited, so every side plan weakens the main one. Watch for themes that look the same but pull against each other (hoard clues vs. sacrifice clues, go-wide pump vs. sacrifice drain, counters vs. sacrificing their holders). Keep the shared core (e.g. "an artifact enters") and commit to one side (V1).
 - **Commander role** (V2). Payoff commander (e.g. "whenever a ninja deals damage"): the deck is mostly enablers, with only ~2 extra payoffs. Enabler commander (the commander *is* the plan, e.g. Kaalia): protection and haste count as enablers; V2's example runs 8–10 enablers and 15–18 payoffs. Enhancer commander (e.g. an attack-trigger doubler): as many enablers as possible (25+ triggers), and at most 1–2 extra enhancers, which are win-more.
-- A plan-specific floor applies even when the commander helps: a spells deck needs 25–30 instants and sorceries before spell payoffs work (V2).
+- A plan-specific floor applies even when the commander helps (V2). The floors, parts and weak points per archetype are in [archetypes.md](archetypes.md) (E28).
 - **Enablers are the biggest plan bucket**, about 25–30 cards that start the plan (V1). Enhancers: only the best 4–5 (V2).
 - **Resilience** (V3): build the plan around not losing. Layer resilience into the plan's own cards: lifegain, threats on artifacts or enchantments, recursion, land ramp (lands rarely die). A "layer" that needs its own package is a side plan (V1 trap).
 - **Rebuild after a wipe** (V4): a full hand, a ramp lead, recursion and key pieces at MV ≤ 3 let the deck redeploy within a turn or two. Key pieces that aren't creatures dodge most wipes: removal gets scarcer from creature → artifact → enchantment → planeswalker → land, and vehicles or permanents that aren't creatures on opponents' turns dodge creature wipes. Cheap fodder means blocking doesn't cost an engine piece.
@@ -279,6 +279,7 @@ Pass/fail checks for a finished list or a proposed change set. In a review, run 
 | E25 | Color fit | Each answer comes from the deck's best color for that job. Every give-back catch-all has a named reason: no better on-color answer for that job (V5) | §1a, trap 17 |
 | E26 | Answer quality | Each Targeted card is cheap (MV ≤ 2) or has a named extra (a second target, a card back, an on-plan synergy, a static upside). None costs more than the threats it usually answers without such an extra (V5) | §1a |
 | E27 | Timing fit | The deck is classified early-weak, late-weak or both from its plan steps (§1a), and the disruption profile matches: early-weak decks have most answers at MV ≤ 2; late-weak or aggro decks have at least a couple of high-impact or multi-target answers that clear the way to the final attack; decks that are both have the cheap early answers and a couple of those closers (V5) | §1a |
+| E28 | Archetype fit | The deck's archetype, or a declared hybrid of two, is named from archetypes.md and confirmed with the user; every listed part has the cards archetypes.md's parts rule asks for; floors are met; no listed contention theme is present as a package (`archetype-match` exclusive cards are the evidence); listed weak points have answers or protection (checked with E8, E24) | archetypes.md, §4 |
 
 **Goldfish symptoms → role** (V1, V3), for `rk-mtg-goldfish` runs or the user's game reports:
 
@@ -301,6 +302,7 @@ Pass/fail checks for a finished list or a proposed change set. In a review, run 
 | Removal sits in hand because casting it costs the whole turn | Answer quality (E26), timing fit (E27) |
 | A permanent type sticks and nothing in the deck answers it | Answer split (E24), color fit (E25) |
 | Blockers or a lock stop the final attack | Timing fit (E27) |
+| Deck feels like two half-decks; the right half never shows up together | Archetype fit (E28), one direction (E3) |
 | Falls behind early and never catches up | Draw (E6), timing fit (E27), rebuild (E21), multipliers over the cap (E4) |
 
 Goldfish before buying cards. Goldfishing also shows which opening hands to keep: mulligan hands with no draw (V1).

@@ -19,13 +19,13 @@ Talk to the agent in plain language. The skill descriptions decide which skill s
 
 Ask to build an EDH deck, review or trim a list, pick cuts, or tell it how a game went. `mtg-deckbuilder` should start.
 
-The skill is grounded in a fixed set of sources: three Command Zone episodes, one Commander Challenge video, TCGplayer's land-count regression, and Draftsim's mana-curve guide. Every target number (role counts, curve, land formula) lives in its single reference file, `principles.md`. The targets are starting points; your play experience outranks them.
+The skill is grounded in a fixed set of sources: three Command Zone episodes, one Commander Challenge video, TCGplayer's land-count regression, and Draftsim's mana-curve guide. Every target number (role counts, curve, land formula) lives in its single reference file, `principles.md`; archetype-specific parts, floors and weak points (tokens, aristocrats, Voltron, aikido and others) live in `archetypes.md`, drawn from Draftsim's archetype list and live EDHREC tag pages. The targets are starting points; your play experience outranks them.
 
 Before anything else it establishes the table rules: bracket, Game Changer limit, budget and price basis, combo rules, pod meta. It reads them from memory or asks; none are built in. It never writes a deck file without your explicit OK on the specific swaps, and it presents every change as cut → add with the role and price delta.
 
-**Build.** It defines the plan in two or three steps, fills the skeleton by role from EDHREC theme pages, and sets the land count with the formula. It then checks budget, Game Changers, and Spellbook combos, and writes an Archidekt-importable `quantity + exact name` list to `~/mtg/<deck>.txt` once you approve. After import, mark the command-zone card or cards as Commander in Archidekt. The text block cannot keep that flag.
+**Build.** It names the archetype, defines the plan in two or three steps, fills the skeleton by role from EDHREC theme and archetype pages, and sets the land count with the formula. It then checks budget, Game Changers, and Spellbook combos, and writes an Archidekt-importable `quantity + exact name` list to `~/mtg/<deck>.txt` once you approve. After import, mark the command-zone card or cards as Commander in Archidekt. The text block cannot keep that flag.
 
-**Review / cuts.** Bring an Archidekt URL or a local file. It tags every card by role, compares counts, curve, and lands against the skeleton, and names the three to five biggest problems. It proposes same-role swaps, then recounts everything as it would look after the changes.
+**Review / cuts.** Bring an Archidekt URL or a local file. If the deck has no playtest log, it first asks how games go: which cards win them, what kills you, how the table treats you. It identifies the deck's archetype by matching the list against EDHREC tag pages and asks you to confirm the plan, then tags every card by role, compares counts, curve, and lands against the skeleton, and names the three to five biggest problems. It proposes same-role swaps, checking each cut against the commander's text so it doesn't cut a card that powers the commander's engine, then recounts everything as it would look after the changes, including the land formula.
 
 **Deep review.** Ask for a deep or thorough review to fan the same review out to four parallel subagents, each with one profile: mana and curve, vegetables and interaction, plan and synergy, and an "opponent at the table" that plays aggro, control and combo archetypes against the list. Each lens owns its own evals, the merged swap set is then checked by a verifier that recounts from scratch, and conflicts between lenses are shown to you. It costs several times a normal review, so it only runs when you ask.
 
@@ -108,7 +108,7 @@ These are job shapes. Fill in your commander, list, path, and budget when you ha
 | `mtg-deckbuilder` | `rk-mtg-scryfall`, `rk-mtg-archidekt`, `rk-mtg-edhrec`, `rk-mtg-spellbook`; `rk-mtg-goldfish` optional. Works with reduced checks if one is missing | Build, role-count review, and playtest log loop |
 | `rk-mtg-commander-deck-playbook` | `rk-mtg-scryfall` | Write a piloting guide. Never rewrite the deck file |
 | `rk-mtg-scryfall` | nothing else | Oracle, legality, search, prices, parse, validate, deck-stats, write |
-| `rk-mtg-edhrec` | nothing else | Unofficial inclusion, synergy, theme pages, and average-deck JSON |
+| `rk-mtg-edhrec` | nothing else | Unofficial inclusion, synergy, theme and archetype (tag) pages, archetype matching, and average-deck JSON |
 | `rk-mtg-archidekt` | nothing else | Derive the API URL from a deck URL and fetch that deck's JSON |
 | `rk-mtg-goldfish` | `rk-mtg-scryfall` for the mana-base check only | Shuffle, mulligan, and play turns round by round, or run a mana-base Monte Carlo check with screw, flood, and sweet-spot odds |
 | `rk-mtg-spellbook` | nothing else | Unofficial combo catalog and bracket estimate |
@@ -120,7 +120,7 @@ If a skill stops and tells you to install the full repo, a helper is missing. Ru
 - `mtg-deckbuilder` builds, reviews by role counts and a land formula, and tunes from a dated playtest log
 - `rk-mtg-commander-deck-playbook` writes a piloting guide for a finished list and does not change that file
 - `rk-mtg-scryfall` looks up Oracle text, legality, searches, prices, deck-stats, and Archidekt parse or validate
-- `rk-mtg-edhrec` reads unofficial `json.edhrec.com` inclusion, synergy, theme, and average-deck pages
+- `rk-mtg-edhrec` reads unofficial `json.edhrec.com` inclusion, synergy, theme, tag, and average-deck pages
 - `rk-mtg-archidekt` derives the API URL from an Archidekt deck URL and fetches that deck's JSON
 - `rk-mtg-goldfish` shuffles a decklist and plays it out round by round, or runs a mana-base Monte Carlo check reporting screw, flood, and sweet-spot odds (using `rk-mtg-scryfall` to identify lands)
 - `rk-mtg-spellbook` looks up catalogued combos and a bracket estimate for a list
