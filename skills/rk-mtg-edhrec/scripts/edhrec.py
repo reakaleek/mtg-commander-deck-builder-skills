@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""EDHREC helper: commander, card, average-deck pages, and merged candidates."""
+"""EDHREC helper: commander, card, tag, average-deck pages, merged candidates, archetype match."""
 
 from __future__ import annotations
 
@@ -21,10 +21,22 @@ CACHE_TTL_SEC = 24 * 60 * 60
 DEFAULT_CACHE = Path.home() / ".cache" / "edhrec"
 DEFAULT_MAX = 10
 DEFAULT_CANDIDATES_MAX = 40
+DEFAULT_MATCH_SYNERGY = 0.1
 KIND_PATH = {
     "commander": "commanders",
     "card": "cards",
+    "tag": "tags",
     "average-deck": "average-decks",
+}
+# Tag pages split by color identity at /tags/{slug}/{color}.
+COLOR_SLUGS = {
+    "w": "mono-white", "u": "mono-blue", "b": "mono-black", "r": "mono-red", "g": "mono-green",
+    "wu": "azorius", "ub": "dimir", "br": "rakdos", "rg": "gruul", "gw": "selesnya",
+    "wb": "orzhov", "ur": "izzet", "bg": "golgari", "rw": "boros", "gu": "simic",
+    "wub": "esper", "ubr": "grixis", "brg": "jund", "rgw": "naya", "gwu": "bant",
+    "wbg": "abzan", "urw": "jeskai", "bgu": "sultai", "rwb": "mardu", "gur": "temur",
+    "wubr": "yore-tiller", "ubrg": "glint-eye", "brgw": "dune-brood",
+    "rgwu": "ink-treader", "gwub": "witch-maw", "wubrg": "five-color",
 }
 # Cross-type lists; a card's category comes from its type list instead.
 META_LISTS = {
@@ -90,7 +102,7 @@ def http_json(url: str, retries: int = 2) -> dict[str, Any]:
             if e.code in (403, 404):
                 raise RuntimeError(
                     f"EDHREC HTTP {e.code}: no page at {url}. "
-                    "Use the exact Oracle name (resolve with Scryfall if needed)."
+                    "Use the exact Oracle name (resolve with Scryfall if needed) or a listed tag slug."
                 ) from e
             raise RuntimeError(f"EDHREC HTTP {e.code}: {payload}") from e
         except urllib.error.URLError as e:
@@ -304,6 +316,100 @@ def similar_commanders(page: dict[str, Any]) -> list[str]:
     return out
 
 
+def card_lists(page: dict[str, Any], lands: bool) -> list[tuple[str, list[Any]]]:
+    """(header, cardviews) per list; commander lists on tag pages are never cards to add."""
+    out: list[tuple[str, list[Any]]] = []
+    for cl in json_dict(page).get("cardlists") or []:
+        if not isinstance(cl, dict):
+            continue
+        header = str(cl.get("header") or cl.get("tag") or "")
+        if "commanders" in header.lower():
+            continue
+        if "land" in header.lower() and not lands:
+            continue
+        out.append((header, cl.get("cardviews") or []))
+    return out
+
+
+def merge_cardviews(
+    merged: dict[str, dict[str, Any]],
+    page: dict[str, Any],
+    page_name: str,
+    exclude: set[str],
+    excluded: set[str],
+    lands: bool,
+) -> None:
+    for header, views in card_lists(page, lands):
+        for view in views:
+            if not isinstance(view, dict) or not view.get("name"):
+                continue
+            key = name_key(view["name"])
+            if key in exclude:
+                excluded.add(key)
+                continue
+            slim = slim_cardview(view)
+            entry = merged.setdefault(key, {"name": view["name"], "inclusion": {}, "sources": []})
+            if header not in META_LISTS and "category" not in entry:
+                entry["category"] = header
+            for stat in ("synergy", "lift", "trend_zscore"):
+                if stat in slim and (stat not in entry or slim[stat] > entry[stat]):
+                    entry[stat] = slim[stat]
+            if "inclusion" in slim:
+                entry["inclusion"][page_name] = slim["inclusion"]
+            entry["sources"].append(f"{page_name}: {header}")
+
+
+def rank_cards(
+    merged: dict[str, dict[str, Any]],
+    sort: str,
+    min_synergy: float | None,
+) -> list[dict[str, Any]]:
+    sort_key = {"synergy": "synergy", "lift": "lift", "trend": "trend_zscore"}.get(sort)
+
+    def rank(entry: dict[str, Any]) -> tuple[float, int]:
+        if sort_key:
+            value = entry.get(sort_key)
+        else:
+            value = max(entry["inclusion"].values(), default=None)
+        pages_hit = len({s.split(":", 1)[0] for s in entry["sources"]})
+        return (value if isinstance(value, (int, float)) else float("-inf"), pages_hit)
+
+    cards = list(merged.values())
+    if min_synergy is not None:
+        cards = [c for c in cards if isinstance(c.get("synergy"), (int, float)) and c["synergy"] >= min_synergy]
+    cards.sort(key=rank, reverse=True)
+    return cards
+
+
+def color_slug(value: str | None) -> str | None:
+    """EDHREC color page slug from WUBRG letters (any order) or a slug like `orzhov`."""
+    if not value:
+        return None
+    raw = value.strip().lower()
+    if raw in COLOR_SLUGS.values() or raw == "colorless":
+        return raw
+    letters = set(raw)
+    if raw == "c":
+        return "colorless"
+    if not letters <= set("wubrg") or len(letters) != len(raw):
+        raise RuntimeError(f"Unknown colors {value!r}: use WUBRG letters (e.g. wb) or a slug like orzhov")
+    for key, slug in COLOR_SLUGS.items():
+        if set(key) == letters:
+            return slug
+    raise RuntimeError(f"Unknown colors {value!r}")
+
+
+def top_commanders(page: dict[str, Any]) -> list[dict[str, Any]]:
+    for cl in json_dict(page).get("cardlists") or []:
+        if isinstance(cl, dict) and str(cl.get("header") or "") == "Top Commanders":
+            return [
+                {"name": v.get("name"), "num_decks": v.get("num_decks")}
+                for v in cl.get("cardviews") or []
+                if isinstance(v, dict) and v.get("name")
+            ]
+    return []
+
+
 def cmd_candidates(args: argparse.Namespace) -> int:
     slug = slugify(args.name)
     if not slug:
@@ -333,44 +439,9 @@ def cmd_candidates(args: argparse.Namespace) -> int:
         if suffix is None:
             name = (json_dict(page).get("card") or {}).get("name") or name
             similar = similar_commanders(page)
-        for cl in json_dict(page).get("cardlists") or []:
-            if not isinstance(cl, dict):
-                continue
-            header = str(cl.get("header") or cl.get("tag") or "")
-            if "land" in header.lower() and not args.lands:
-                continue
-            for view in cl.get("cardviews") or []:
-                if not isinstance(view, dict) or not view.get("name"):
-                    continue
-                key = name_key(view["name"])
-                if key in exclude:
-                    excluded.add(key)
-                    continue
-                slim = slim_cardview(view)
-                entry = merged.setdefault(key, {"name": view["name"], "inclusion": {}, "sources": []})
-                if header not in META_LISTS and "category" not in entry:
-                    entry["category"] = header
-                for stat in ("synergy", "lift", "trend_zscore"):
-                    if stat in slim and (stat not in entry or slim[stat] > entry[stat]):
-                        entry[stat] = slim[stat]
-                if "inclusion" in slim:
-                    entry["inclusion"][page_name] = slim["inclusion"]
-                entry["sources"].append(f"{page_name}: {header}")
+        merge_cardviews(merged, page, page_name, exclude, excluded, args.lands)
 
-    sort_key = {"synergy": "synergy", "lift": "lift", "trend": "trend_zscore"}.get(args.sort)
-
-    def rank(entry: dict[str, Any]) -> tuple[float, int]:
-        if sort_key:
-            value = entry.get(sort_key)
-        else:
-            value = max(entry["inclusion"].values(), default=None)
-        pages_hit = len({s.split(":", 1)[0] for s in entry["sources"]})
-        return (value if isinstance(value, (int, float)) else float("-inf"), pages_hit)
-
-    cards = list(merged.values())
-    if args.min_synergy is not None:
-        cards = [c for c in cards if isinstance(c.get("synergy"), (int, float)) and c["synergy"] >= args.min_synergy]
-    cards.sort(key=rank, reverse=True)
+    cards = rank_cards(merged, args.sort, args.min_synergy)
     payload: dict[str, Any] = {
         "kind": "candidates",
         "name": name,
@@ -384,6 +455,132 @@ def cmd_candidates(args: argparse.Namespace) -> int:
     if args.exclude:
         payload["excluded"] = len(excluded)
     payload["cards"] = cards[: args.max]
+    json.dump(payload, sys.stdout, indent=2, ensure_ascii=False)
+    sys.stdout.write("\n")
+    return 0
+
+
+def cmd_tags(args: argparse.Namespace) -> int:
+    # /tags/themes skips tribal tags; /tags lists themes and tribes together.
+    path = "tags" if args.all else "themes"
+    dest = cache_path(Path(args.cache_dir).expanduser(), "tag-index", path)
+    cached = not args.fresh and dest.exists() and time.time() - dest.stat().st_mtime < CACHE_TTL_SEC
+    if cached:
+        page = json.loads(dest.read_text(encoding="utf-8"))
+    else:
+        page = http_json(f"{BASE}/tags.json" if args.all else f"{BASE}/tags/themes.json")
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        dest.write_text(json.dumps(page), encoding="utf-8")
+    needle = (args.grep or "").lower()
+    tags: list[dict[str, Any]] = []
+    for _header, views in card_lists(page, lands=True):
+        for view in views:
+            if not isinstance(view, dict):
+                continue
+            url = str(view.get("url") or "")
+            if not url.startswith("/tags/"):
+                continue
+            slug = url.removeprefix("/tags/")
+            name = view.get("name") or slug
+            if needle and needle not in slug and needle not in str(name).lower():
+                continue
+            tags.append({"slug": slug, "name": name, "num_decks": view.get("num_decks")})
+    payload = {
+        "kind": "tags",
+        "index": path,
+        "cached": cached,
+        "total": len(tags),
+        "returned": min(len(tags), args.max),
+        "tags": tags[: args.max],
+    }
+    json.dump(payload, sys.stdout, indent=2, ensure_ascii=False)
+    sys.stdout.write("\n")
+    return 0
+
+
+def cmd_tag(args: argparse.Namespace) -> int:
+    slug = slugify(args.slug)
+    if not slug:
+        print("Empty tag slug", file=sys.stderr)
+        return 1
+    colors = color_slug(args.colors)
+    page, cached = fetch_page("tag", slug, Path(args.cache_dir).expanduser(), args.fresh, colors)
+    exclude = read_deck_names(args.exclude) if args.exclude else set()
+    excluded: set[str] = set()
+    merged: dict[str, dict[str, Any]] = {}
+    merge_cardviews(merged, page, slug, exclude, excluded, args.lands)
+    cards = rank_cards(merged, args.sort, args.min_synergy)
+    for card in cards:
+        card["inclusion"] = card["inclusion"].get(slug)
+        card["lists"] = [s.split(": ", 1)[1] for s in card.pop("sources")]
+    payload: dict[str, Any] = {
+        "kind": "tag",
+        "tag": slug,
+        "colors": colors,
+        "cached": cached,
+        "top_commanders": top_commanders(page)[: args.max_commanders],
+        "sort": args.sort,
+        "total": len(cards),
+        "returned": min(len(cards), args.max),
+    }
+    if args.exclude:
+        payload["excluded"] = len(excluded)
+    payload["cards"] = cards[: args.max]
+    json.dump(payload, sys.stdout, indent=2, ensure_ascii=False)
+    sys.stdout.write("\n")
+    return 0
+
+
+def cmd_archetype_match(args: argparse.Namespace) -> int:
+    deck = read_deck_names(args.deck)
+    if not deck:
+        print("No cards found in deck file", file=sys.stderr)
+        return 1
+    colors = color_slug(args.colors)
+    cache_dir = Path(args.cache_dir).expanduser()
+    # Lands are skipped: their synergy mostly tracks color, not archetype.
+    hits: dict[str, dict[str, dict[str, Any]]] = {}
+    cached_by_tag: dict[str, bool] = {}
+    for raw in args.tag:
+        slug = slugify(raw)
+        if not slug:
+            print("Empty tag slug", file=sys.stderr)
+            return 1
+        page, cached = fetch_page("tag", slug, cache_dir, args.fresh, colors)
+        cached_by_tag[slug] = cached
+        found: dict[str, dict[str, Any]] = {}
+        for _header, views in card_lists(page, lands=False):
+            for view in views:
+                if not isinstance(view, dict) or not view.get("name"):
+                    continue
+                key = name_key(view["name"])
+                synergy = view.get("synergy")
+                if key not in deck or not isinstance(synergy, (int, float)) or synergy < args.min_synergy:
+                    continue
+                if key not in found or synergy > found[key]["synergy"]:
+                    found[key] = {"name": view["name"], "synergy": round(synergy, 3)}
+        hits[slug] = found
+
+    tags: list[dict[str, Any]] = []
+    for slug, found in hits.items():
+        others = set().union(*(set(f) for s, f in hits.items() if s != slug))
+        matched = sorted(found.values(), key=lambda c: c["synergy"], reverse=True)
+        tags.append({
+            "tag": slug,
+            "cached": cached_by_tag[slug],
+            "matched": len(matched),
+            "score": round(sum(c["synergy"] for c in matched), 3),
+            "exclusive": [c["name"] for c in matched if name_key(c["name"]) not in others],
+            "cards": matched,
+        })
+    tags.sort(key=lambda t: t["score"], reverse=True)
+    payload = {
+        "kind": "archetype-match",
+        "colors": colors,
+        "deck_cards": len(deck),
+        "min_synergy": args.min_synergy,
+        "tags": tags,
+    }
     json.dump(payload, sys.stdout, indent=2, ensure_ascii=False)
     sys.stdout.write("\n")
     return 0
@@ -508,6 +705,46 @@ def build_parser() -> argparse.ArgumentParser:
     themes = sub.add_parser("themes", help="List theme slugs advertised on a commander page")
     add_shared_flags(themes)
     themes.set_defaults(func=cmd_themes)
+
+    tags = sub.add_parser("tags", help="List EDHREC tag slugs by popularity (/tags/themes)")
+    tags.add_argument("--grep", default=None, help="Keep tags whose slug or name contains this text")
+    tags.add_argument("--all", action="store_true", help="Include tribal tags (/tags)")
+    tags.add_argument("--max", type=int, default=DEFAULT_CANDIDATES_MAX, dest="max")
+    tags.add_argument("--fresh", action="store_true", help="Bypass the 24h cache")
+    tags.add_argument("--cache-dir", default=str(DEFAULT_CACHE))
+    tags.set_defaults(func=cmd_tags)
+
+    tag = sub.add_parser(
+        "tag",
+        help="GET /pages/tags/{slug}[/{colors}].json: an archetype's signature cards across all commanders",
+    )
+    tag.add_argument("slug", help="Tag slug, e.g. aristocrats, tokens, aikido")
+    tag.add_argument("--colors", default=None, help="WUBRG letters (e.g. wb) or a color slug (orzhov)")
+    tag.add_argument(
+        "--sort",
+        choices=("inclusion", "synergy", "lift", "trend"),
+        default="synergy",
+    )
+    tag.add_argument("--min-synergy", type=float, default=None)
+    tag.add_argument("--lands", action="store_true", help="Keep land lists")
+    tag.add_argument("--max", type=int, default=DEFAULT_CANDIDATES_MAX, dest="max")
+    tag.add_argument("--max-commanders", type=int, default=DEFAULT_MAX)
+    add_exclude_flag(tag)
+    tag.add_argument("--fresh", action="store_true", help="Bypass the 24h cache")
+    tag.add_argument("--cache-dir", default=str(DEFAULT_CACHE))
+    tag.set_defaults(func=cmd_tag)
+
+    match = sub.add_parser(
+        "archetype-match",
+        help="Score a decklist against tag pages: which archetype it is, and any side package",
+    )
+    match.add_argument("deck", help="Decklist file (or -) with `qty name` lines")
+    match.add_argument("--tag", action="append", required=True, help="Tag slug to score (repeatable)")
+    match.add_argument("--colors", default=None, help="Deck colors: WUBRG letters or a color slug")
+    match.add_argument("--min-synergy", type=float, default=DEFAULT_MATCH_SYNERGY)
+    match.add_argument("--fresh", action="store_true", help="Bypass the 24h cache")
+    match.add_argument("--cache-dir", default=str(DEFAULT_CACHE))
+    match.set_defaults(func=cmd_archetype_match)
 
     card = sub.add_parser("card", help="GET /pages/cards/{slug}.json")
     add_shared_flags(card)

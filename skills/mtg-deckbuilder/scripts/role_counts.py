@@ -9,12 +9,16 @@ creature, artifact-enchantment, flexible, land, graveyard.
 
 Swaps for a recount: --cut "Name" and --add "Name|Primary|Secondaries|MV|Hits"
 (both repeatable); the output then has "before", "after" and "delta".
+
+The land formula (principles §3) uses "cheap": nonland, non-MDFC rows at MV <= 2
+tagged Ramp or Draw (primary or secondary), so cutting cheap ramp shows up in it.
 """
 
 from __future__ import annotations
 
 import argparse
 import json
+import math
 import sys
 from collections import Counter
 from pathlib import Path
@@ -25,6 +29,8 @@ TAGS = (
     "Enabler", "Payoff", "Enhancer", "Wincon",
 )
 MDFC_LAND = {"default": 0.38, "mythic": 0.74}
+# principles §3: lands = 31.42 + 3.13 × avgMV − 0.28 × cheap
+LAND_FORMULA = (31.42, 3.13, 0.28)
 
 
 def front(name: str) -> str:
@@ -94,6 +100,7 @@ def summarize(rows: list[dict[str, Any]], mythic: set[str]) -> dict[str, Any]:
     any_tag: Counter[str] = Counter()
     hits: Counter[str] = Counter()
     cheap_targeted = 0
+    cheap_mana_draw = 0
     curve: Counter[str] = Counter()
     mv_total = 0
     mv_cards = 0
@@ -121,7 +128,15 @@ def summarize(rows: list[dict[str, Any]], mythic: set[str]) -> dict[str, Any]:
         if "Land" not in row["secondaries"]:
             mv_total += row["mv"] * qty
             mv_cards += qty
+            if row["mv"] <= 2 and {"Ramp", "Draw"} & {row["primary"], *row["secondaries"]}:
+                cheap_mana_draw += qty
     mdfc_credit = sum(MDFC_LAND["mythic" if front(n) in mythic else "default"] for n in mdfcs)
+    avg_mv = mv_total / mv_cards if mv_cards else None
+    formula = None
+    if avg_mv is not None:
+        base, per_mv, per_cheap = LAND_FORMULA
+        value = base + per_mv * avg_mv - per_cheap * cheap_mana_draw
+        formula = {"value": round(value, 2), "rounded_up": math.ceil(value)}
     return {
         "cards": sum(r["qty"] for r in rows),
         "primary": dict(sorted(primary.items())),
@@ -132,7 +147,9 @@ def summarize(rows: list[dict[str, Any]], mythic: set[str]) -> dict[str, Any]:
         "lands": lands,
         "spell_land_mdfcs": mdfcs,
         "land_total_with_mdfc_credit": round(lands + mdfc_credit, 2),
-        "avg_mv_nonland_excl_mdfc": round(mv_total / mv_cards, 3) if mv_cards else None,
+        "avg_mv_nonland_excl_mdfc": round(avg_mv, 3) if avg_mv is not None else None,
+        "cheap_mana_draw_mv_le_2": cheap_mana_draw,
+        "land_formula": formula,
         "rows_without_mv": no_mv,
     }
 
@@ -143,9 +160,11 @@ def delta(before: dict[str, Any], after: dict[str, Any]) -> dict[str, Any]:
         keys = set(before[key]) | set(after[key])
         changed = {k: after[key].get(k, 0) - before[key].get(k, 0) for k in sorted(keys)}
         out[key] = {k: v for k, v in changed.items() if v}
-    for key in ("lands", "land_total_with_mdfc_credit", "targeted_mv_le_2"):
+    for key in ("lands", "land_total_with_mdfc_credit", "targeted_mv_le_2", "cheap_mana_draw_mv_le_2"):
         if after[key] != before[key]:
             out[key] = round(after[key] - before[key], 2)
+    if before["land_formula"] and after["land_formula"] and before["land_formula"] != after["land_formula"]:
+        out["land_formula"] = round(after["land_formula"]["value"] - before["land_formula"]["value"], 2)
     return out
 
 

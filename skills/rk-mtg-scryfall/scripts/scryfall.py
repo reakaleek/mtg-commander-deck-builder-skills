@@ -516,15 +516,29 @@ def parse_fields(raw: str | None) -> list[str] | None:
 def fetch_collection(identifiers: list[dict[str, Any]]) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
     cards: list[dict[str, Any]] = []
     missing: list[dict[str, Any]] = []
-    for i in range(0, len(identifiers), COLLECTION_BATCH):
-        batch = identifiers[i : i + COLLECTION_BATCH]
+    # /cards/collection rejects full "Front // Back" names but finds the front face.
+    sent: list[dict[str, Any]] = []
+    original: dict[str, str] = {}
+    for ident in identifiers:
+        name = ident.get("name")
+        if isinstance(name, str) and "//" in name:
+            front = name.split("//", 1)[0].strip()
+            original[front.lower()] = name
+            ident = {**ident, "name": front}
+        sent.append(ident)
+    for i in range(0, len(sent), COLLECTION_BATCH):
+        batch = sent[i : i + COLLECTION_BATCH]
         result = http_json(
             "POST",
             f"{API}/cards/collection",
             {"identifiers": batch},
         )
         cards.extend(result.get("data") or [])
-        missing.extend(result.get("not_found") or [])
+        for item in result.get("not_found") or []:
+            name = item.get("name") if isinstance(item, dict) else None
+            if isinstance(name, str) and name.lower() in original:
+                item = {**item, "name": original[name.lower()]}
+            missing.append(item)
     return cards, missing
 
 
