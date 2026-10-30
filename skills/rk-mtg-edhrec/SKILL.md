@@ -1,6 +1,6 @@
 ---
 name: rk-mtg-edhrec
-description: Fetch EDHREC commander staples, card synergies, inclusion rates, and average decks from json.edhrec.com. Use when the user asks about EDHREC, high synergy cards, Commander staples, inclusion, average decklists, or what people play with a commander.
+description: Fetch EDHREC commander staples, card synergies, inclusion rates, archetype (tag) pages, and average decks from json.edhrec.com. Use when the user asks about EDHREC, high synergy cards, Commander staples, inclusion, average decklists, what people play with a commander, an archetype's signature cards, or which archetype a list is.
 ---
 
 # EDHREC
@@ -26,6 +26,9 @@ This skill returns inclusion and commander-specific synergy. Oracle text and leg
 - Named commander, theme or budget subpage: `commander --theme SLUG` or `--budget`
 - Named card, who plays it or related cards: `card`
 - Named commander, typical list: `average-deck`
+- Archetype slugs (tokens, aristocrats, aikido, …) by popularity: `tags` (`--grep TEXT`; `--all` adds tribal tags)
+- An archetype's signature cards across all commanders, in the deck's colors: `tag SLUG --colors WUBRG`
+- Which archetype a list is, and any second-archetype cluster: `archetype-match deck.txt --colors WUBRG --tag A --tag B …`
 
 ```bash
 python scripts/edhrec.py candidates 'COMMANDER NAME' --theme blink --theme control --exclude deck.txt
@@ -35,11 +38,18 @@ python scripts/edhrec.py commander 'COMMANDER NAME' --theme tokens
 python scripts/edhrec.py commander 'COMMANDER NAME' --budget
 python scripts/edhrec.py card 'CARD NAME'
 python scripts/edhrec.py average-deck 'COMMANDER NAME'
+python scripts/edhrec.py tags --grep sac
+python scripts/edhrec.py tag aristocrats --colors wb --exclude deck.txt
+python scripts/edhrec.py archetype-match deck.txt --colors wb --tag aristocrats --tag tokens --tag voltron
 ```
 
 `--max` defaults to 10 cards per list. `--list HEADER` keeps matching list titles. Repeatable. `--fresh` skips the 24h cache. `--exclude FILE` (`commander`, `card`, `candidates`; `-` for stdin) drops cards already in that decklist and reports how many were dropped.
 
 `candidates` merges the base commander page with every `--theme` page (and the budget page with `--budget`) into one deduped list, 40 cards by default. Each card has its best `synergy`, `lift`, and `trend_zscore`, its `inclusion` on each page, `sources` (page and list), and `category` (its type list). `--sort synergy|inclusion|lift|trend` picks the order, and cards on more pages win ties. `--min-synergy X` drops weak fits. Land lists are left out unless you pass `--lands`, because the mana base is built separately.
+
+`tag` reads a general archetype page: Top Commanders (printed as `top_commanders`, `--max-commanders N`), then ranked cards with `inclusion`, `synergy`, `lift` and `lists` (the page lists they came from). It takes the same `--sort`, `--min-synergy`, `--lands`, `--max` and `--exclude` as `candidates`. Always pass `--colors` (WUBRG letters in any order, or a color slug like `orzhov`): without it, synergy mostly tracks which colors the archetype is played in.
+
+`archetype-match` scores each `--tag` page against the list: `matched` deck cards with synergy ≥ `--min-synergy` (default 0.1), their summed `score`, and `exclusive` (matched here and on no other tag passed). Tags come back highest score first. Lands are skipped because their synergy tracks color. One tag well ahead is the archetype. A lower tag with several `exclusive` cards is a possible second package; read those cards before calling it one, since protection and generic utility cards land there too.
 
 No fuzzy slugs. Missing pages often return HTTP 403 from the CDN, not 404. Resolve the Oracle name with the `rk-mtg-scryfall` skill, then retry. Check the returned `name`.
 
@@ -53,6 +63,8 @@ URLs:
 - `https://json.edhrec.com/pages/commanders/{slug}/{theme}.json`
 - `https://json.edhrec.com/pages/cards/{slug}.json`
 - `https://json.edhrec.com/pages/average-decks/{slug}.json`
+- `https://json.edhrec.com/pages/tags/{slug}.json` and `…/tags/{slug}/{colors}.json` (e.g. `orzhov`, `mono-black`, `five-color`)
+- `https://json.edhrec.com/pages/tags/themes.json` (theme index) and `…/pages/tags.json` (themes plus tribes). The slug is each entry's `url` after `/tags/`, not its `slug` field.
 
 ## Headers and limits
 
@@ -67,7 +79,7 @@ Cache under `~/.cache/edhrec/{kind}/{slug}.json` for 24 hours. Inclusion and pri
 
 ## How to read the numbers
 
-- `synergy` is commander-specific lift, not quality. High synergy means the card shows up here more than its baseline. A generic staple can have high inclusion and low synergy.
+- `synergy` is commander-specific lift, not quality. On a tag page it is measured against all decks in those colors, not against one commander. High synergy means the card shows up here more than its baseline. A generic staple can have high inclusion and low synergy.
 - `inclusion` is `num_decks` / `potential_decks`: the share of that commander's (or theme's) decks that play the card.
 - `lift` is how many times more often the card shows up here than in other decks that could play it. It is the same idea as synergy, expressed as a ratio.
 - `trend_zscore` above about 2 means the card is rising right now, often because it is new. Check that it is not just hype.
