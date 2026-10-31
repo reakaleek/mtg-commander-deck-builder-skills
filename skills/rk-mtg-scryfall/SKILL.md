@@ -25,6 +25,7 @@ This skill returns Oracle text, legality, printings, and prices. Inclusion and c
 - Discover or filter unknown cards: `search` with `unique:cards`
 - Candidates for a deck role or theme: follow [finding-cards.md](finding-cards.md)
 - Tagger tag names for `otag:` / `art:`: `tags`
+- Which tags a known card has: `card-tags`
 - Value a list in a requested currency: `prices`
 - Parse or check an Archidekt export: `parse-deck` / `validate-deck`
 - Curve, pips, colored sources, tipping point, playability, Game Changers: `deck-stats`
@@ -39,6 +40,7 @@ python scripts/scryfall.py search 'QUERY'
 python scripts/scryfall.py search 'otag:sweeper order:edhrec' --commander 'COMMANDER NAME' --exclude deck.txt
 python scripts/scryfall.py tags draw
 python scripts/scryfall.py tags '/^removal-/' --kind oracle
+python scripts/scryfall.py card-tags 'CARD NAME' --pattern draw
 python scripts/scryfall.py named 'CARD NAME'
 python scripts/scryfall.py named 'fuzzy fragment' --fuzzy
 python scripts/scryfall.py collection decklist.txt --fuzzy-missing
@@ -59,6 +61,8 @@ python scripts/scryfall.py bulk oracle_cards
 For deck candidates, pass `--commander NAME` (repeat it for partners). That prefixes `id<=<identity> f:commander game:paper`, wraps the rest of the query in parentheses, and leaves display options like `order:` outside them. Output `query` echoes the final string. `--exclude FILE` (`-` for stdin) drops cards already in the decklist, plus the commander, and keeps paging until `--max` new cards are found. `excluded` says how many were dropped.
 
 Every search reports `unknown_tags`: tag terms Scryfall does not recognize. A misspelled tag matches nothing on its own and silently changes results inside `or` or `-`, so fix any listed tag before trusting the output. `tags PATTERN` greps the Tagger tag list (substring, or `/regex/`; `--kind art` for illustration tags). The list comes from Scryfall's tag docs page and is cached for a week under `~/.cache/scryfall/`. Aliases that the page does not list are confirmed with one search and remembered.
+
+`card-tags NAME --pattern PATTERN` reports which tags from the Tagger list a card has. The API has no field for a card's tags, so it filters the list by the required pattern (same forms as `tags`; `--kind art` for illustration tags) and tests the matches with searches. An empty `tags` list only means no matching tag: try another word. A pattern that matches more than 300 tags is refused, so narrow it.
 
 `--fuzzy` needs a recognizable fragment. A wild typo 404s or can match the wrong card. Check the returned `name`.
 
