@@ -31,6 +31,8 @@ TAG_LINK_RE = {
 }
 TAG_TERM_RE = re.compile(r"(?<![\w-])-?(otag|oracletag|function|atag|arttag|art):([a-z0-9-]+)", re.I)
 DEFAULT_TAGS_MAX = 60
+TAG_PROBE_BATCH = 25
+TAG_PROBE_LIMIT = 300
 DEFAULT_FIELDS = (
     "name,mana_cost,cmc,type_line,oracle_text,color_identity,"
     "produced_mana,keywords,game_changer,commander_legal,edhrec_rank,price_usd"
@@ -585,14 +587,46 @@ def load_tag_index(cache_dir: Path, fresh: bool = False) -> dict[str, Any]:
     return index
 
 
-def tag_has_cards(keyword: str, name: str) -> bool:
-    url = f"{API}/cards/search?{urllib.parse.urlencode({'q': f'{keyword}:{name}'})}"
+def query_has_cards(query: str) -> bool:
+    url = f"{API}/cards/search?{urllib.parse.urlencode({'q': query})}"
     try:
         return bool(http_json("GET", url).get("total_cards"))
     except RuntimeError as e:
         if str(e).startswith("Scryfall HTTP 404"):
             return False
         raise
+
+
+def tag_has_cards(keyword: str, name: str) -> bool:
+    return query_has_cards(f"{keyword}:{name}")
+
+
+def match_tags(names: list[str], pattern: str | None) -> list[str]:
+    if pattern and len(pattern) > 1 and pattern.startswith("/") and pattern.endswith("/"):
+        regex = re.compile(pattern[1:-1], re.I)
+        return [n for n in names if regex.search(n)]
+    if pattern:
+        return [n for n in names if pattern.lower() in n]
+    return names
+
+
+def tags_on_card(oracle_id: str, keyword: str, names: list[str]) -> tuple[list[str], int]:
+    """Find which tags a card has by searching batches and splitting the ones that hit."""
+    pending = [names[i : i + TAG_PROBE_BATCH] for i in range(0, len(names), TAG_PROBE_BATCH)]
+    found: list[str] = []
+    requests = 0
+    while pending:
+        batch = pending.pop()
+        requests += 1
+        terms = " or ".join(f"{keyword}:{name}" for name in batch)
+        if not query_has_cards(f"oracleid:{oracle_id} ({terms})"):
+            continue
+        if len(batch) == 1:
+            found.append(batch[0])
+        else:
+            middle = len(batch) // 2
+            pending += [batch[:middle], batch[middle:]]
+    return sorted(found), requests
 
 
 def unknown_tags(query: str, cache_dir: Path) -> list[str]:
@@ -622,15 +656,8 @@ def unknown_tags(query: str, cache_dir: Path) -> list[str]:
 
 def cmd_tags(args: argparse.Namespace) -> int:
     index = load_tag_index(Path(args.cache_dir).expanduser(), fresh=args.fresh)
-    names = index[args.kind]
     pattern = args.pattern
-    if pattern and len(pattern) > 1 and pattern.startswith("/") and pattern.endswith("/"):
-        regex = re.compile(pattern[1:-1], re.I)
-        matches = [n for n in names if regex.search(n)]
-    elif pattern:
-        matches = [n for n in names if pattern.lower() in n]
-    else:
-        matches = names
+    matches = match_tags(index[args.kind], pattern)
     json.dump(
         {
             "kind": args.kind,
@@ -639,6 +666,40 @@ def cmd_tags(args: argparse.Namespace) -> int:
             "returned": min(len(matches), args.max),
             "tags": matches[: args.max],
             "keyword": "otag:" if args.kind == "oracle" else "art:",
+            "source": index["source"],
+            "cached": index["cached"],
+        },
+        sys.stdout,
+        indent=2,
+        ensure_ascii=False,
+    )
+    sys.stdout.write("\n")
+    return 0
+
+
+def cmd_card_tags(args: argparse.Namespace) -> int:
+    index = load_tag_index(Path(args.cache_dir).expanduser(), fresh=args.fresh)
+    candidates = match_tags(index[args.kind], args.pattern)
+    if len(candidates) > TAG_PROBE_LIMIT:
+        raise RuntimeError(
+            f"Pattern matches {len(candidates)} tags, over the limit of {TAG_PROBE_LIMIT}; narrow it"
+        )
+    card = http_json("GET", f"{API}/cards/named?{urllib.parse.urlencode({'exact': args.name})}")
+    keyword = "otag" if args.kind == "oracle" else "art"
+    # Reversible cards keep oracle_id on their faces. An id avoids quoting trouble in names.
+    oracle_id = card.get("oracle_id") or (card.get("card_faces") or [{}])[0].get("oracle_id")
+    if not oracle_id:
+        raise RuntimeError(f"Scryfall returned no oracle_id for {card.get('name') or args.name}")
+    found, requests = tags_on_card(oracle_id, keyword, candidates)
+    json.dump(
+        {
+            "card": card.get("name"),
+            "kind": args.kind,
+            "pattern": args.pattern,
+            "tested": len(candidates),
+            "requests": requests,
+            "tags": found,
+            "keyword": f"{keyword}:",
             "source": index["source"],
             "cached": index["cached"],
         },
@@ -1561,6 +1622,14 @@ def build_parser() -> argparse.ArgumentParser:
     tags.add_argument("--fresh", action="store_true")
     tags.add_argument("--cache-dir", default=str(DEFAULT_CACHE))
     tags.set_defaults(func=cmd_tags)
+
+    card_tags = sub.add_parser("card-tags", help="Find which Tagger tags a card has")
+    card_tags.add_argument("name")
+    card_tags.add_argument("--pattern", required=True, help="Substring, or /regex/")
+    card_tags.add_argument("--kind", choices=("oracle", "art"), default="oracle")
+    card_tags.add_argument("--fresh", action="store_true")
+    card_tags.add_argument("--cache-dir", default=str(DEFAULT_CACHE))
+    card_tags.set_defaults(func=cmd_card_tags)
 
     named = sub.add_parser("named", help="GET /cards/named")
     named.add_argument("name")
